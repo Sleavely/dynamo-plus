@@ -1,6 +1,8 @@
-# Dynamo Plus [![CircleCI](https://circleci.com/gh/Sleavely/dynamo-plus.svg?style=svg)](https://circleci.com/gh/Sleavely/dynamo-plus)
+# Dynamo Plus
 
-> Extend and supercharge your DynamoDB.DocumentClient
+[ ![npm version](https://img.shields.io/npm/v/dynamo-plus.svg?style=flat) ](https://npmjs.org/package/dynamo-plus "View this project on npm") [ ![CircleCI](https://circleci.com/gh/Sleavely/dynamo-plus.svg?style=svg) ](https://circleci.com/gh/Sleavely/dynamo-plus) [ ![Issues](https://img.shields.io/github/issues/Sleavely/dynamo-plus.svg) ](https://github.com/Sleavely/dynamo-plus/issues)
+
+> Extend and supercharge your DynamoDB DocumentClient
 
 # Installation
 
