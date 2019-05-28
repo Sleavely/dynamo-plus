@@ -1,0 +1,13 @@
+{
+  "extends": "standard",
+  "rules": {
+    "comma-dangle": [
+      "warn",
+      "only-multiline"
+    ],
+    "no-trailing-spaces": "error"
+  },
+  "env": {
+    "jest": true
+  }
+}
