@@ -27,7 +27,6 @@ const data = await client.get(regularDynamoParams)
 
 - automatically appends .promise()
 - automatically retries and backs off when you get throttled
-- provides additional convenience methods
 
 ## .promise() by default
 
@@ -40,19 +39,6 @@ Whenever a query fails for reasons such as `LimitExceededException` the promise 
 For information about retryable exceptions, see https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.MessagesAndCodes
 
 If you want to use a delay from the beginning, set `lastBackOff` to a millisecond value in the query params.
-
-## Convenience methods
-
-### scanTable()
-
-A modified version of scan(). [Same call signature](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property).
-
-Automatically traverses through pagination and resolves with the entire resultset.
-
-### streamTable()
-
-Similar to scanTable(), this one goes through the entirety of your table, but uses an _EventEmitter_ so that you don't have to keep your entire resultset in memory.
-
 
 # FAQ
 
