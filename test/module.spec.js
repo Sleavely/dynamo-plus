@@ -7,4 +7,8 @@ describe('dynamo-plus', () => {
       require(`${src}/..`)
     }).not.toThrow()
   })
+  it('has DynamoPlus property', () => {
+    const dp = require(`${src}/..`)
+    expect(dp).toHaveProperty('DynamoPlus')
+  })
 })
