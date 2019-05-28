@@ -1,4 +1,4 @@
-# Dynamo Plus [![CircleCI](https://circleci.com/gh/Sleavely/dynamo-plus/tree/master.svg?style=svg&circle-token=3d9ba39451f3fd7173df433bf09d48bd69e2ecb7)](https://circleci.com/gh/Sleavely/dynamo-plus/tree/master)
+# Dynamo Plus [![CircleCI](https://circleci.com/gh/Sleavely/dynamo-plus.svg?style=svg)](https://circleci.com/gh/Sleavely/dynamo-plus)
 
 > Extend and supercharge your DynamoDB.DocumentClient
 
