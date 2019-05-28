@@ -12,7 +12,7 @@ npm i dynamo-plus
 
 ```js
 const { DynamoPlus } = require('dynamo-plus')
-const client = new DynamoPlus({
+const client = DynamoPlus({
   region: 'eu-west-1',
 })
 
@@ -54,7 +54,7 @@ They are all available as `original_get` and similar:
 
 ```js
 const { DynamoPlus } = require('dynamo-plus')
-const client = new DynamoPlus()
+const client = DynamoPlus()
 
 client.original_get(myParams, (err, data) => {})
 // or
