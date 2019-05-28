@@ -15,6 +15,8 @@
     "retry"
   ],
   "author": "Joakim Hedlund <contact@joakimhedlund.com>",
+  "homepage": "https://github.com/Sleavely/dynamo-plus",
+  "repository": "github:Sleavely/dynamo-plus",
   "license": "MIT",
   "devDependencies": {
     "aws-sdk": "^2.455.0",
