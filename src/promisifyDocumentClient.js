@@ -8,21 +8,7 @@ const sleep = require('./utils/sleep')
  * This is a mutable operation.
  */
 const promisifyDocumentClient = (client) => {
-  const methods = [
-    'batchGet',
-    'batchWrite',
-    'createSet',
-    'delete',
-    'get',
-    'put',
-    'query',
-    'scan',
-    'transactGet',
-    'transactWrite',
-    'update',
-  ]
-
-  methods.forEach((method) => {
+  exports.methodsToPromisify.forEach((method) => {
     client[`original_${method}`] = client[method]
     client[method] = async (params = {}) => {
       return client[`original_${method}`](params).promise()
@@ -40,3 +26,17 @@ const promisifyDocumentClient = (client) => {
 }
 
 module.exports = exports = promisifyDocumentClient
+
+exports.methodsToPromisify = [
+  'batchGet',
+  'batchWrite',
+  'createSet',
+  'delete',
+  'get',
+  'put',
+  'query',
+  'scan',
+  'transactGet',
+  'transactWrite',
+  'update',
+]
