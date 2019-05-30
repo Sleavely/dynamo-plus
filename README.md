@@ -4,6 +4,8 @@
 
 > Extend and supercharge your DynamoDB DocumentClient
 
+[API Documentation](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html) (minus the callbacks, of course)
+
 # Installation
 
 ```shell
