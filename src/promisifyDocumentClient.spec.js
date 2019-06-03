@@ -1,6 +1,6 @@
 
 const promisifyDocumentClient = require('./promisifyDocumentClient')
-const methods = promisifyDocumentClient.methodsToPromisify
+const methods = require('./clientMethods')
 
 const mockClient = (method = 'attack') => ({
   [method]: () => ({ promise: async () => 1337 })
@@ -30,6 +30,7 @@ it.each(methods)('makes %s() return a promise', async (method) => {
 
 it.each(methods)('proxies calls to original_%s()', async (method) => {
   // Woop woop
+  throw new Error('jest doesnt have a it.eachTodo() method so here we are')
 })
 
 // TODO: move retry-logic to the retryableExceptions file
