@@ -1,10 +1,18 @@
 
-const promisifyDocumentClient = require('./promisifyDocumentClient')
+const mockMethods = [
+  'foo',
+  'bar',
+]
+jest.doMock('./clientMethods', () => {
+  return mockMethods
+})
 const methods = require('./clientMethods')
 
 const mockClient = (method = 'attack') => ({
   [method]: () => ({ promise: async () => 1337 })
 })
+
+const promisifyDocumentClient = require('./promisifyDocumentClient')
 
 it.each(methods)('makes %s() return a promise', async (method) => {
   const client = mockClient(method)
