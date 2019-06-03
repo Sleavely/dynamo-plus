@@ -1,8 +1,5 @@
 
-const mockMethods = [
-  'foo',
-  'bar',
-]
+const mockMethods = [ 'foo', 'bar' ]
 jest.doMock('./clientMethods', () => {
   return mockMethods
 })
