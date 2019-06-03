@@ -8,8 +8,8 @@ const mockClient = (method = 'attack') => ({
 
 it.each(methods)('makes %s() return a promise', async (method) => {
   const client = mockClient(method)
-
   promisifyDocumentClient(client)
+
   const clientCall = client[method]()
 
   expect(clientCall).toBeInstanceOf(Promise)
@@ -17,9 +17,12 @@ it.each(methods)('makes %s() return a promise', async (method) => {
 })
 
 it.each(methods)('proxies calls to original_%s()', async (method) => {
-  // Woop woop
-  throw new Error('jest doesnt have a it.eachTodo() method so here we are')
-})
+  const client = mockClient(method)
+  promisifyDocumentClient(client)
+  client[`original_${method}`] = jest.fn(() => ({ promise: async () => 1337 }))
 
-// TODO: move retry-logic to the retryableExceptions file
-it.todo('automatically retries when the original throw a known error')
+  const clientCall = client[method]()
+  await clientCall
+
+  expect(client[`original_${method}`]).toHaveBeenCalled()
+})
