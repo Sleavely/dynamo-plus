@@ -1,8 +1,5 @@
 
-const mockMethods = [ 'foo', 'bar' ]
-jest.doMock('./clientMethods', () => {
-  return mockMethods
-})
+jest.doMock('./clientMethods', () => ['foo', 'bar'])
 const methods = require('./clientMethods')
 
 const mockClient = (method = 'attack') => ({
