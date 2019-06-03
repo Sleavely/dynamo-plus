@@ -10,9 +10,11 @@ it('resolves after a custom amount of time', async () => {
   // for this but I couldn't for the life of me get it working, so..
   const startTime = Date.now()
   const expectedSleepTime = 50
-  const margin = 150
+  const margin = 20
   await expect(sleep(expectedSleepTime)).toResolve()
-  expect(Date.now() - startTime).toBeLessThan(expectedSleepTime + margin)
+  const finishedAt = Date.now() - startTime
+  expect(finishedAt).toBeLessThan(expectedSleepTime + margin)
+  expect(finishedAt).toBeGreaterThan(margin)
 })
 
 it('can resolve with a custom value', async () => {
