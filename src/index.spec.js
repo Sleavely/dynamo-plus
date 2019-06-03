@@ -12,10 +12,12 @@ it('can be loaded without throwing exceptions', () => {
     requireUncached(`./index`)
   }).not.toThrow()
 })
+
 it('has DynamoPlus property', () => {
   const dp = requireUncached(`./index`)
   expect(dp).toHaveProperty('DynamoPlus')
 })
+
 it('DynamoPlus() returns a new DocumentClient', () => {
   const { DynamoPlus } = requireUncached(`./index`)
   const client = DynamoPlus()
