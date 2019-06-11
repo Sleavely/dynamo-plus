@@ -64,6 +64,8 @@ const response = await documentClient.all(params)
 // response now contains ALL documents from 2015, not just the first 1MB
 ```
 
+---
+
 <a name="methods-stream"></a>
 ### stream(params)
 
@@ -89,6 +91,8 @@ emitter.on('items', async (items) => {
   console.log(items)
 })
 ```
+
+---
 
 <a name="methods-streamsync"></a>
 ### streamSync(params)
