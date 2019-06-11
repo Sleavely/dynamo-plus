@@ -78,7 +78,7 @@ exports.appendStream = (client) => {
   }
 
   /**
-   * Similar to stream, but waits for all eventlisteners to resolve before recursing the next batch. (This means listeners MUST return promises)
+   * Similar to stream, but waits for all eventlisteners to resolve before recursing the next batch.
    *
    * @param {DynamoDB.Types.ScanInput}
    * @returns {EventEmitter} emits "data", "items", "done" and "error" events

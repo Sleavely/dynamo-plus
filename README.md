@@ -14,7 +14,7 @@ npm i dynamo-plus
 
 ```js
 const { DynamoPlus } = require('dynamo-plus')
-const client = DynamoPlus({
+const documentClient = DynamoPlus({
   region: 'eu-west-1',
 })
 
@@ -24,13 +24,14 @@ const regularDynamoParams = {
     myKey: '1337'
   }
 }
-const data = await client.get(regularDynamoParams)
+const data = await documentClient.get(regularDynamoParams)
 ```
 
 # Features
 
 - automatically appends .promise()
 - automatically retries and backs off when you get throttled
+- new methods for scan() operations
 
 ## .promise() by default
 
@@ -44,6 +45,77 @@ For information about retryable exceptions, see https://docs.aws.amazon.com/amaz
 
 If you want to use a delay from the beginning, set `lastBackOff` to a millisecond value in the query params.
 
+## New methods for scan()
+
+We've supercharged _scan()_ for those times when you want to recurse through entire tables.
+
+<a name="methods-all"></a>
+### all(params)
+
+- **params** - [AWS.DynamoDB.DocumentClient.scan() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property)
+
+```js
+const params = {
+  TableName : 'MyTable',
+  FilterExpression : 'Year = :this_year',
+  ExpressionAttributeValues : {':this_year' : 2015}
+}
+const response = await documentClient.all(params)
+// response now contains ALL documents from 2015, not just the first 1MB
+```
+
+<a name="methods-stream"></a>
+### stream(params)
+
+An EventEmitter-driven approach to recursing your tables. This is a powerful tool when you have datasets that are too large to keep in memory all at once.
+
+**Note:** stream() does not care whether your event listeners finish before it requests the next batch. (It will, however, respect throttling exceptions from DynamoDB.) If you want to control the pace, see [`streamSync()`](#methods-streamsync)
+
+- **params** - [AWS.DynamoDB.DocumentClient.scan() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property)
+
+The returned EventEmitter emits the following events:
+
+- `data` - Raw response from each scan
+- `items` - An array with documents
+- `done` - Emitted once there are no more documents scan
+- `error`
+
+```js
+const params = {
+  TableName : 'MyTable'
+}
+const emitter = await documentClient.stream(params)
+emitter.on('items', async (items) => {
+  console.log(items)
+})
+```
+
+<a name="methods-streamsync"></a>
+### streamSync(params)
+
+Like `stream()`, but will not proceed to request the next batch until all eventlisteners have returned a value (or resolved, if they return a Promise).
+
+- **params** - [AWS.DynamoDB.DocumentClient.scan() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property)
+
+The returned EventEmitter emits the following events:
+
+- `data` - Raw response from each scan
+- `items` - An array with documents
+- `done` - Emitted once there are no more documents scan
+- `error`
+
+```js
+const params = {
+  TableName : 'MyTable'
+}
+const emitter = await documentClient.streamSync(params)
+emitter.on('items', async (items) => {
+  // Do something async with the documents
+  return Promise.all(items.map((item) => sendItemToSantaClaus(item)))
+  // Once the Promise.all resolves, streamSync() will automatically request the next batch.
+})
+```
+
 # FAQ
 
 ### I'm getting errors that the `aws-sdk` module isn't installed.
@@ -56,11 +128,11 @@ They are all available as `original_get` and similar:
 
 ```js
 const { DynamoPlus } = require('dynamo-plus')
-const client = DynamoPlus()
+const documentClient = DynamoPlus()
 
-client.original_get(myParams, (err, data) => {})
+documentClient.original_get(myParams, (err, data) => {})
 // or
-client.original_get(myParams).promise()
+documentClient.original_get(myParams).promise()
 ```
 
 Automatic retries don't apply to the original methods.
