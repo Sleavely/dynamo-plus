@@ -31,13 +31,18 @@ const data = await documentClient.get(regularDynamoParams)
 
 - automatically appends .promise()
 - automatically retries and backs off when you get throttled
-- new methods for scan() operations
+- new methods for scan operations
+  - [scanAll(params)](#methods-scanall)
+  - [scanStream(params)](#methods-scanstream)
+  - [scanStreamSync(params)](#methods-scanstreamsync)
 
-## .promise() by default
+## Promises by default
+
+The DynamoPlus client will automatically append `.promise()` for you, making all methods awaitable by default.
 
 When the client is instantiated, the original methods are prefixed and accessible through e.g. ``original_${method}``
 
-## retries and backoff
+## Retries and backoff
 
 Whenever a query fails for reasons such as `LimitExceededException` the promise will reboot behind the scenes so that you don't have to worry about it.
 
@@ -49,8 +54,8 @@ If you want to use a delay from the beginning, set `lastBackOff` to a millisecon
 
 We've supercharged _scan()_ for those times when you want to recurse through entire tables.
 
-<a name="methods-all"></a>
-### all(params)
+<a name="methods-scanall"></a>
+### scanAll(params)
 
 - **params** - [AWS.DynamoDB.DocumentClient.scan() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property)
 
@@ -60,18 +65,18 @@ const params = {
   FilterExpression : 'Year = :this_year',
   ExpressionAttributeValues : {':this_year' : 2015}
 }
-const response = await documentClient.all(params)
+const response = await documentClient.scanAll(params)
 // response now contains ALL documents from 2015, not just the first 1MB
 ```
 
 ---
 
-<a name="methods-stream"></a>
-### stream(params)
+<a name="methods-scanstream"></a>
+### scanStream(params)
 
 An EventEmitter-driven approach to recursing your tables. This is a powerful tool when you have datasets that are too large to keep in memory all at once.
 
-**Note:** stream() does not care whether your event listeners finish before it requests the next batch. (It will, however, respect throttling exceptions from DynamoDB.) If you want to control the pace, see [`streamSync()`](#methods-streamsync)
+**Note:** scanStream() does not care whether your event listeners finish before it requests the next batch. (It will, however, respect throttling exceptions from DynamoDB.) If you want to control the pace, see [scanStreamSync](#methods-streamsync).
 
 - **params** - [AWS.DynamoDB.DocumentClient.scan() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property)
 
@@ -86,7 +91,7 @@ The returned EventEmitter emits the following events:
 const params = {
   TableName : 'MyTable'
 }
-const emitter = await documentClient.stream(params)
+const emitter = await documentClient.scanStream(params)
 emitter.on('items', async (items) => {
   console.log(items)
 })
@@ -94,10 +99,10 @@ emitter.on('items', async (items) => {
 
 ---
 
-<a name="methods-streamsync"></a>
-### streamSync(params)
+<a name="methods-scanstreamsync"></a>
+### scanStreamSync(params)
 
-Like `stream()`, but will not proceed to request the next batch until all eventlisteners have returned a value (or resolved, if they return a Promise).
+Like `scanStream()`, but will not proceed to request the next batch until all eventlisteners have returned a value (or resolved, if they return a Promise).
 
 - **params** - [AWS.DynamoDB.DocumentClient.scan() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property)
 
@@ -112,11 +117,11 @@ The returned EventEmitter emits the following events:
 const params = {
   TableName : 'MyTable'
 }
-const emitter = await documentClient.streamSync(params)
+const emitter = await documentClient.scanStreamSync(params)
 emitter.on('items', async (items) => {
   // Do something async with the documents
   return Promise.all(items.map((item) => sendItemToSantaClaus(item)))
-  // Once the Promise.all resolves, streamSync() will automatically request the next batch.
+  // Once the Promise.all resolves, scanStreamSync() will automatically request the next batch.
 })
 ```
 

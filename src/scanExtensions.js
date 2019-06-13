@@ -22,17 +22,14 @@ const scanRecursor = async (passalongs, chunkCallback) => {
   }
 }
 
-/**
- * Adds "all()" method for loading an entire table into an array.
- */
-exports.appendAll = (client) => {
+module.exports = exports = (client) => {
   /**
    * Scan a table into memory.
    *
    * @param {DynamoDB.Types.ScanInput}
    * @returns {Promise<Array>} Resolves with an array of Items
    */
-  client.all = async (scanParams = {}) => {
+  client.scanAll = async (scanParams = {}) => {
     return new Promise((resolve, reject) => {
       const items = []
       try {
@@ -45,13 +42,7 @@ exports.appendAll = (client) => {
       }
     })
   }
-}
 
-/**
- * Adds "stream()" and "streamSync()", recursive
- * alternatives to scan() that use EventEmitter.
- */
-exports.appendStream = (client) => {
   /**
    * Returns an EventEmitter that you can subscribe on to be
    * notified of each batch of items from the table. This is
@@ -62,7 +53,7 @@ exports.appendStream = (client) => {
    * @param {DynamoDB.Types.ScanInput}
    * @returns {EventEmitter} emits "data", "items", "done" and "error" events
    */
-  client.stream = (scanParams = {}) => {
+  client.scanStream = (scanParams = {}) => {
     const emitter = new EventEmitter()
     try {
       scanRecursor({ client, scanParams }, async (data) => {
@@ -83,7 +74,7 @@ exports.appendStream = (client) => {
    * @param {DynamoDB.Types.ScanInput}
    * @returns {EventEmitter} emits "data", "items", "done" and "error" events
    */
-  client.streamSync = (scanParams = {}) => {
+  client.scanStreamSync = (scanParams = {}) => {
     const emitter = new EventEmitter()
     try {
       scanRecursor({ client, scanParams }, async (data) => {
