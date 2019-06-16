@@ -56,7 +56,7 @@ const scanEmitter = (client, scanParams, parallelScans, synchronous = false) => 
   return emitter
 }
 
-module.exports = exports = (client) => {
+exports.appendScanExtensions = (client) => {
   /**
    * Scan a table into memory.
    *
