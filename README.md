@@ -148,7 +148,7 @@ documentClient.original_get(myParams, (err, data) => {})
 documentClient.original_get(myParams).promise()
 ```
 
-Automatic retries don't apply to the original methods.
+Automatic retries don't apply when calling original methods directly.
 
 
 ### None of these questions seem to be questions.
