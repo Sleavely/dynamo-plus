@@ -67,7 +67,7 @@ exports.appendScanExtensions = (client) => {
     return new Promise((resolve, reject) => {
       const items = []
       try {
-        scanRecursor(scanParams, async (data) => {
+        scanRecursor({ client, scanParams }, async (data) => {
           data.Items.forEach(item => items.push(item))
           if (!data.LastEvaluatedKey) resolve(items)
         })
