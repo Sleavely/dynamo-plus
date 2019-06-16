@@ -72,13 +72,16 @@ const response = await documentClient.scanAll(params)
 ---
 
 <a name="methods-scanstream"></a>
-### scanStream(params)
+### scanStream(params[, parallelScans])
 
 An EventEmitter-driven approach to recursing your tables. This is a powerful tool when you have datasets that are too large to keep in memory all at once.
+
+To spread out the workload across your table partitions you can define a number of `parallelScans`. DynamoPlus will automatically keep track of the queries and emit a single `done` event once they all complete.
 
 **Note:** scanStream() does not care whether your event listeners finish before it requests the next batch. (It will, however, respect throttling exceptions from DynamoDB.) If you want to control the pace, see [scanStreamSync](#methods-streamsync).
 
 - **params** - [AWS.DynamoDB.DocumentClient.scan() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property)
+- **parallelScans** - _integer_ Amount of segments to split the scan operation into. (_Default: 1_)
 
 The returned EventEmitter emits the following events:
 
@@ -100,11 +103,12 @@ emitter.on('items', async (items) => {
 ---
 
 <a name="methods-scanstreamsync"></a>
-### scanStreamSync(params)
+### scanStreamSync(params[, parallelScans])
 
 Like `scanStream()`, but will not proceed to request the next batch until all eventlisteners have returned a value (or resolved, if they return a Promise).
 
 - **params** - [AWS.DynamoDB.DocumentClient.scan() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property)
+- **parallelScans** - _integer_ Amount of segments to split the scan operation into. (_Default: 1_)
 
 The returned EventEmitter emits the following events:
 

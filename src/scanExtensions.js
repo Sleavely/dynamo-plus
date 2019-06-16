@@ -1,5 +1,6 @@
 
 const { EventEmitter } = require('events')
+const allListeners = require('./utils/allListeners')
 
 /**
  * recursion
@@ -22,7 +23,40 @@ const scanRecursor = async (passalongs, chunkCallback) => {
   }
 }
 
-module.exports = exports = (client) => {
+const scanEmitter = (client, scanParams, parallelScans, synchronous = false) => {
+  const emitter = new EventEmitter()
+  let completedParallelScans = 0
+  try {
+    for (let i = 0; i < parallelScans; i++) {
+      // We only want to touch the request if explicitly told to,
+      // they could be setting their own values for parallelism.
+      if (parallelScans > 1) {
+        scanParams.Segment = i
+        scanParams.TotalSegments = parallelScans
+      }
+
+      scanRecursor({ client, scanParams }, async (data) => {
+        if (synchronous) {
+          await allListeners(emitter, 'data', data)
+          await allListeners(emitter, 'items', data.Items)
+        } else {
+          emitter.emit('data', data)
+          emitter.emit('items', data.Items)
+        }
+
+        if (!data.LastEvaluatedKey) {
+          completedParallelScans++
+          if (completedParallelScans === parallelScans) emitter.emit('done')
+        }
+      })
+    }
+  } catch (err) {
+    emitter.emit('error', err)
+  }
+  return emitter
+}
+
+exports.appendScanExtensions = (client) => {
   /**
    * Scan a table into memory.
    *
@@ -51,41 +85,22 @@ module.exports = exports = (client) => {
    * implement your own pagination to deal with chunks.
    *
    * @param {DynamoDB.Types.ScanInput}
+   * @param {Number} parallelScans
    * @returns {EventEmitter} emits "data", "items", "done" and "error" events
    */
-  client.scanStream = (scanParams = {}) => {
-    const emitter = new EventEmitter()
-    try {
-      scanRecursor({ client, scanParams }, async (data) => {
-        emitter.emit('data', data)
-        emitter.emit('items', data.Items)
-
-        if (!data.LastEvaluatedKey) emitter.emit('done')
-      })
-    } catch (err) {
-      emitter.emit('error', err)
-    }
-    return emitter
+  client.scanStream = (scanParams = {}, parallelScans = 1) => {
+    return scanEmitter(client, scanParams, parallelScans)
   }
 
   /**
    * Similar to stream, but waits for all eventlisteners to resolve before recursing the next batch.
+   * If parallel scanning is in effect, the synchronisity will only apply on a per-segment basis.
    *
    * @param {DynamoDB.Types.ScanInput}
+   * @param {Number} parallelScans
    * @returns {EventEmitter} emits "data", "items", "done" and "error" events
    */
-  client.scanStreamSync = (scanParams = {}) => {
-    const emitter = new EventEmitter()
-    try {
-      scanRecursor({ client, scanParams }, async (data) => {
-        await Promise.all(emitter.listeners('data').map((listener) => listener(data)))
-        await Promise.all(emitter.listeners('items').map((listener) => listener(data.Items)))
-
-        if (!data.LastEvaluatedKey) emitter.emit('done')
-      })
-    } catch (err) {
-      emitter.emit('error', err)
-    }
-    return emitter
+  client.scanStreamSync = (scanParams = {}, parallelScans = 1) => {
+    return scanEmitter(client, scanParams, parallelScans, true)
   }
 }
