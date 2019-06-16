@@ -1,6 +1,5 @@
 
 jest.doMock('./utils/allListeners', () => jest.fn(async (...input) => [...input]))
-const allListeners = require('./utils/allListeners')
 
 const mockClient = (method = 'scan') => {
   const methodMock = jest.fn(async () => ({ Items: [] }))
