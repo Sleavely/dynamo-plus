@@ -3,7 +3,7 @@ jest.doMock('./utils/allListeners', () => jest.fn(async (...input) => [...input]
 const allListeners = require('./utils/allListeners')
 
 const mockClient = (method = 'scan') => {
-  const methodMock = jest.fn(async () => {1337})
+  const methodMock = jest.fn(async () => ({ Items: [] }))
   return {
     mockReference: methodMock,
     methodName: method,
@@ -11,26 +11,71 @@ const mockClient = (method = 'scan') => {
   }
 }
 
-const appendScanExtensions = require('./scanExtensions')
+const { appendScanExtensions } = require('./scanExtensions')
 
 beforeEach(() => {
   jest.clearAllMocks()
 })
 
 describe('scanExtensions', () => {
-  it.todo('appends scanAll() to DocumentClient')
-  it.todo('appends scanStream() to DocumentClient')
-  it.todo('appends scanStreamSync() to DocumentClient')
+  it.each(['scanAll', 'scanStream', 'scanStreamSync'])('appends %s() to DocumentClient', (methodName) => {
+    const client = mockClient()
+
+    appendScanExtensions(client)
+
+    expect(client).toHaveProperty(methodName)
+    expect(client[methodName]).toBeInstanceOf(Function)
+  })
 })
 
 describe('scanAll()', () => {
-  it.todo('returns a Promise')
-  it.todo('forwards parameters to scan()')
-  it.todo('resolves with the resultset')
-  it.todo('performs multiple scans if necessary')
+  it('returns a Promise', () => {
+    const client = mockClient()
+    appendScanExtensions(client)
+
+    expect(client.scanAll()).toBeInstanceOf(Promise)
+  })
+
+  it('forwards parameters to scan()', async () => {
+    const client = mockClient()
+    appendScanExtensions(client)
+
+    const lux = {
+      location: 'Los Angeles',
+      owner: 'Lucifer Morningstar',
+    }
+    await client.scanAll(lux)
+
+    expect(client.mockReference).toHaveBeenCalledWith(lux)
+  })
+
+  it('resolves with the resultset items', async () => {
+    const client = mockClient()
+    appendScanExtensions(client)
+    const result = { Items: [{ name: 'Amenadiel' }, { name: 'Linda' }] }
+    client.mockReference.mockResolvedValueOnce(result)
+
+    await expect(client.scanAll()).resolves.toEqual(result.Items)
+  })
+
+  it('performs multiple scans if necessary', async () => {
+    const client = mockClient()
+    appendScanExtensions(client)
+
+    const firstRound = { Items: [{ name: 'Maze' }, { name: 'Trixie' }], LastEvaluatedKey: 'Chloe' }
+    client.mockReference.mockResolvedValueOnce(firstRound)
+
+    const secondRound = { Items: [{ name: 'Abel' }, { name: 'Cain' }] }
+    client.mockReference.mockResolvedValueOnce(secondRound)
+
+    const results = await client.scanAll()
+
+    expect(client.mockReference).toHaveBeenCalledTimes(2)
+    expect(client.mockReference.mock.calls[1][0]).toEqual({ ExclusiveStartKey: 'Chloe' })
+    expect(results).toEqual(firstRound.Items.concat(secondRound.Items))
+  })
 })
-describe.each(['scanStream', 'scanStreamSync'])
-('%s()', () => {
+describe.each(['scanStream', 'scanStreamSync'])('%s()', () => {
   it.todo('returns an EventEmitter')
   it.todo('forwards parameters to scan()')
   it.todo('emits data')
