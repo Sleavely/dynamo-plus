@@ -30,6 +30,7 @@ const scanEmitter = (client, scanParams, parallelScans, synchronous = false) => 
     // We only want to touch the request if explicitly told to,
     // they could be setting their own values for parallelism.
     if (parallelScans > 1) {
+      scanParams = { ...scanParams }
       scanParams.Segment = i
       scanParams.TotalSegments = parallelScans
     }
