@@ -94,7 +94,7 @@ The returned EventEmitter emits the following events:
 const params = {
   TableName : 'MyTable'
 }
-const emitter = await documentClient.scanStream(params)
+const emitter = documentClient.scanStream(params)
 emitter.on('items', async (items) => {
   console.log(items)
 })
@@ -121,7 +121,7 @@ The returned EventEmitter emits the following events:
 const params = {
   TableName : 'MyTable'
 }
-const emitter = await documentClient.scanStreamSync(params)
+const emitter = documentClient.scanStreamSync(params)
 emitter.on('items', async (items) => {
   // Do something async with the documents
   return Promise.all(items.map((item) => sendItemToSantaClaus(item)))
