@@ -26,32 +26,30 @@ const scanRecursor = async (passalongs, chunkCallback) => {
 const scanEmitter = (client, scanParams, parallelScans, synchronous = false) => {
   const emitter = new EventEmitter()
   let completedParallelScans = 0
-  try {
-    for (let i = 0; i < parallelScans; i++) {
-      // We only want to touch the request if explicitly told to,
-      // they could be setting their own values for parallelism.
-      if (parallelScans > 1) {
-        scanParams.Segment = i
-        scanParams.TotalSegments = parallelScans
+  for (let i = 0; i < parallelScans; i++) {
+    // We only want to touch the request if explicitly told to,
+    // they could be setting their own values for parallelism.
+    if (parallelScans > 1) {
+      scanParams.Segment = i
+      scanParams.TotalSegments = parallelScans
+    }
+
+    scanRecursor({ client, scanParams }, async (data) => {
+      if (synchronous) {
+        await allListeners(emitter, 'data', data)
+        await allListeners(emitter, 'items', data.Items)
+      } else {
+        emitter.emit('data', data)
+        emitter.emit('items', data.Items)
       }
 
-      scanRecursor({ client, scanParams }, async (data) => {
-        if (synchronous) {
-          await allListeners(emitter, 'data', data)
-          await allListeners(emitter, 'items', data.Items)
-        } else {
-          emitter.emit('data', data)
-          emitter.emit('items', data.Items)
-        }
-
-        if (!data.LastEvaluatedKey) {
-          completedParallelScans++
-          if (completedParallelScans === parallelScans) emitter.emit('done')
-        }
-      })
-    }
-  } catch (err) {
-    emitter.emit('error', err)
+      if (!data.LastEvaluatedKey) {
+        completedParallelScans++
+        if (completedParallelScans === parallelScans) emitter.emit('done')
+      }
+    }).catch((err) => {
+      emitter.emit('error', err)
+    })
   }
   return emitter
 }
