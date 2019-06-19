@@ -212,5 +212,32 @@ describe.each(['scanStream', 'scanStreamSync'])('%s()', (streamMethod) => {
   })
 })
 describe('scanStreamSync()', () => {
-  it.todo('waits for data and items listeners before proceeding')
+  it('waits for data and items listeners before proceeding', (done) => {
+    expect.hasAssertions()
+    const client = mockClient()
+    appendScanExtensions(client)
+
+    // We'll use the same mock for both client and listener,
+    // that way we can verify the order in which they get called
+    const mockImplementations = [
+      async () => ({ Items: [{ name: 'Apple' }], LastEvaluatedKey: 'Fruits' }),
+      async () => { return new Promise((resolve) => { setTimeout(resolve, 100) }) },
+      async () => ({ Items: [{ name: 'Samsung' }] })
+    ]
+    mockImplementations.forEach((func) => client.mockReference.mockImplementationOnce(func))
+
+    const params = {}
+    const emitter = client.scanStreamSync(params)
+
+    const itemsListener = client.mockReference
+    emitter.on('items', itemsListener)
+    emitter.on('done', () => {
+      expect(itemsListener).toHaveBeenCalledTimes(4)
+      // Because its by reference, the same params object is sent to every scan() call
+      expect(itemsListener.mock.calls[0][0]).toBe(params)
+      expect(itemsListener.mock.calls[1][0]).not.toBe(params)
+      expect(itemsListener.mock.calls[2][0]).toBe(params)
+      done()
+    })
+  })
 })
