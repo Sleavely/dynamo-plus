@@ -211,6 +211,45 @@ describe.each(['scanStream', 'scanStreamSync'])('%s()', (streamMethod) => {
     })
   })
 })
+describe('scanStream()', () => {
+  it('doesnt wait for listeners before proceeding', (done) => {
+    expect.hasAssertions()
+    const client = mockClient()
+    appendScanExtensions(client)
+
+    // We'll use the same mock for both client and listener,
+    // that way we can verify the order in which they get called
+    const mockImplementations = [
+      async () => ({ Items: [{ time: Date.now() }], LastEvaluatedKey: 'Fruits' }),
+      async () => { return new Promise((resolve) => { setTimeout(() => resolve(Date.now()), 25) }) },
+      async () => ({ Items: [{ time: Date.now() }] })
+    ]
+    mockImplementations.forEach((func) => client.mockReference.mockImplementationOnce(func))
+
+    const params = {}
+    const emitter = client.scanStream(params)
+
+    const itemsListener = client.mockReference
+    emitter.on('items', itemsListener)
+    emitter.on('done', async () => {
+      expect(client.mockReference).toHaveBeenCalledTimes(4)
+      // Because its by reference, the same params object is sent to every scan() call
+      expect(client.mockReference.mock.calls[0][0]).toBe(params)
+      expect(client.mockReference.mock.calls[2][0]).toBe(params)
+
+      // Lets verify the timings
+      expect(itemsListener.mock.results[1].value).toBeInstanceOf(Promise)
+      const callbackTimer = await itemsListener.mock.results[1].value
+
+      expect(client.mockReference.mock.results[2].value).toBeInstanceOf(Promise)
+      const secondScanResult = await client.mockReference.mock.results[2].value
+      const { Items: [{ time: secondScanTimer }] } = secondScanResult
+
+      expect(secondScanTimer).toBeLessThan(callbackTimer)
+      done()
+    })
+  })
+})
 describe('scanStreamSync()', () => {
   it('waits for data and items listeners before proceeding', (done) => {
     expect.hasAssertions()
