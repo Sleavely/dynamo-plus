@@ -5,11 +5,15 @@ const {
   autoRetry,
   retryableExceptions,
 } = require('./retryableExceptions')
+const {
+  appendScanExtensions,
+} = require('./scanExtensions')
 
 const clientConstructor = (options = {}) => {
   const dynamoClient = new DynamoDB.DocumentClient(options)
   promisifyDocumentClient(dynamoClient)
   autoRetry(dynamoClient)
+  appendScanExtensions(dynamoClient)
   return dynamoClient
 }
 
