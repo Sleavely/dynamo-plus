@@ -31,6 +31,8 @@ const data = await documentClient.get(regularDynamoParams)
 
 - automatically appends .promise()
 - automatically retries and backs off when you get throttled
+- new methods for query operations
+  - [queryAll(params)](#methods-queryall)
 - new methods for scan operations
   - [scanAll(params)](#methods-scanall)
   - [scanStream(params)](#methods-scanstream)
@@ -49,6 +51,29 @@ Whenever a query fails for reasons such as `LimitExceededException` the promise 
 For information about retryable exceptions, see https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.MessagesAndCodes
 
 If you want to use a delay from the beginning, set `lastBackOff` to a millisecond value in the query params.
+
+## New methods for query()
+
+Query gets a facelift with it's new sibling _queryAll()_. It automatically paginates through resultsets for you and resolves with the entire array of items.
+
+<a name="methods-queryall"></a>
+### queryAll(params)
+
+- **params** - [AWS.DynamoDB.DocumentClient.query() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#query-property)
+
+
+```js
+const params = {
+  TableName : 'items',
+  IndexName: 'articleNo-index',
+  KeyConditionExpression: 'articleNo = :val',
+  ExpressionAttributeValues: { ':val': articleNo }
+}
+const response = await documentClient.queryAll(params)
+// response now contains ALL items with the articleNo, not just the first 1MB
+```
+
+---
 
 ## New methods for scan()
 
@@ -128,6 +153,8 @@ emitter.on('items', async (items) => {
   // Once the Promise.all resolves, scanStreamSync() will automatically request the next batch.
 })
 ```
+
+---
 
 # FAQ
 
