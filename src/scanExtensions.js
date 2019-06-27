@@ -1,26 +1,11 @@
 
 const { EventEmitter } = require('events')
 const allListeners = require('./utils/allListeners')
+const recursor = require('./utils/recursor')
 
-/**
- * recursion
- * /rɪˈkəːʃ(ə)n/
- *
- * Did you mean: Recursion
- *
- * @see https://www.google.com/search?q=Recursion
- */
 const scanRecursor = async (passalongs, chunkCallback) => {
-  const { client, scanParams } = passalongs
-
-  const data = await client.scan(scanParams)
-  await chunkCallback(data)
-
-  // continue scanning if we have more items
-  if (data.LastEvaluatedKey) {
-    scanParams.ExclusiveStartKey = data.LastEvaluatedKey
-    scanRecursor(passalongs, chunkCallback)
-  }
+  passalongs.method = 'scan'
+  return recursor(passalongs, chunkCallback)
 }
 
 const scanEmitter = (client, scanParams, parallelScans, synchronous = false) => {
