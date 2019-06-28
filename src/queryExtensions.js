@@ -66,7 +66,7 @@ exports.appendQueryExtensions = (client) => {
    * @param {AWS.DynamoDB.DocumentClient.QueryInput} queryParams
    * @returns {EventEmitter} emits "data", "items", "done" and "error" events
    */
-  client.queryStream = (queryParams) => {
+  client.queryStream = (queryParams = {}) => {
     return queryEmitter(client, queryParams)
   }
 
