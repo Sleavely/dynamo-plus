@@ -33,6 +33,8 @@ const data = await documentClient.get(regularDynamoParams)
 - automatically retries and backs off when you get throttled
 - new methods for query operations
   - [queryAll(params)](#methods-queryall)
+  - [queryStream(params)](#methods-querystream)
+  - [queryStreamSync(params)](#methods-querystreamsync)
 - new methods for scan operations
   - [scanAll(params)](#methods-scanall)
   - [scanStream(params)](#methods-scanstream)
@@ -54,10 +56,12 @@ If you want to use a delay from the beginning, set `lastBackOff` to a millisecon
 
 ## New methods for query()
 
-Query gets a facelift with it's new sibling _queryAll()_. It automatically paginates through resultsets for you and resolves with the entire array of items.
+Query has new sibling methods that automatically paginate through resultsets for you.
 
 <a name="methods-queryall"></a>
 ### queryAll(params)
+
+Resolves with the entire array of matching items.
 
 - **params** - [AWS.DynamoDB.DocumentClient.query() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#query-property)
 
@@ -75,12 +79,32 @@ const response = await documentClient.queryAll(params)
 
 ---
 
+<a name="methods-querystream"></a>
+### queryStream(params)
+
+- **params** - [AWS.DynamoDB.DocumentClient.query() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#query-property)
+
+Like [scanStream](#methods-scanstream), but for queries.
+
+---
+
+<a name="methods-querystreamsync"></a>
+### queryStreamSync(params)
+
+- **params** - [AWS.DynamoDB.DocumentClient.query() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#query-property)
+
+Like [scanStreamSync](#methods-scanstreamsync), but for queries.
+
+---
+
 ## New methods for scan()
 
 We've supercharged _scan()_ for those times when you want to recurse through entire tables.
 
 <a name="methods-scanall"></a>
 ### scanAll(params)
+
+Resolves with the entire array of matching items.
 
 - **params** - [AWS.DynamoDB.DocumentClient.scan() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property)
 
