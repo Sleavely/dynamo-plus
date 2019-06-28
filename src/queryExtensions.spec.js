@@ -170,46 +170,6 @@ describe.each(['queryStream', 'queryStreamSync'])('%s()', (streamMethod) => {
       done()
     })
   })
-
-  it('launches multiple querys when parallelQuerys > 1', (done) => {
-    expect.hasAssertions()
-    const client = mockClient()
-    appendQueryExtensions(client)
-
-    const parallelQuerys = 10
-    client[streamMethod]({}, parallelQuerys)
-
-    setTimeout(() => {
-      expect(client.mockReference).toHaveBeenCalledTimes(parallelQuerys)
-      done()
-    }, 10)
-  })
-
-  it('only emits done when all segments have completed', (done) => {
-    expect.hasAssertions()
-    const client = mockClient()
-    appendQueryExtensions(client)
-
-    const results = [
-      { Items: [{ name: 'Beyonce' }] },
-      { Items: [{ name: 'Britney' }], LastEvaluatedKey: 'Britney' },
-      { Items: [{ name: 'Shakira' }] },
-    ]
-    client.mockReference
-      .mockResolvedValueOnce(results[0])
-      .mockResolvedValueOnce(results[1])
-      .mockResolvedValueOnce(results[2])
-
-    const emitter = client[streamMethod]({}, 2)
-
-    const itemsListener = jest.fn()
-    emitter.on('items', itemsListener)
-    emitter.on('done', () => {
-      expect(itemsListener).toHaveBeenCalledTimes(3)
-      expect(itemsListener.mock.calls.map(args => args[0])).toEqual(results.map(res => res.Items))
-      done()
-    })
-  })
 })
 describe('queryStream()', () => {
   it('doesnt wait for listeners before proceeding', (done) => {
