@@ -31,6 +31,10 @@ const data = await documentClient.get(regularDynamoParams)
 
 - automatically appends .promise()
 - automatically retries and backs off when you get throttled
+- new methods for query operations
+  - [queryAll(params)](#methods-queryall)
+  - [queryStream(params)](#methods-querystream)
+  - [queryStreamSync(params)](#methods-querystreamsync)
 - new methods for scan operations
   - [scanAll(params)](#methods-scanall)
   - [scanStream(params)](#methods-scanstream)
@@ -50,12 +54,57 @@ For information about retryable exceptions, see https://docs.aws.amazon.com/amaz
 
 If you want to use a delay from the beginning, set `lastBackOff` to a millisecond value in the query params.
 
+## New methods for query()
+
+Query has new sibling methods that automatically paginate through resultsets for you.
+
+<a name="methods-queryall"></a>
+### queryAll(params)
+
+Resolves with the entire array of matching items.
+
+- **params** - [AWS.DynamoDB.DocumentClient.query() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#query-property)
+
+
+```js
+const params = {
+  TableName : 'items',
+  IndexName: 'articleNo-index',
+  KeyConditionExpression: 'articleNo = :val',
+  ExpressionAttributeValues: { ':val': articleNo }
+}
+const response = await documentClient.queryAll(params)
+// response now contains ALL items with the articleNo, not just the first 1MB
+```
+
+---
+
+<a name="methods-querystream"></a>
+### queryStream(params)
+
+- **params** - [AWS.DynamoDB.DocumentClient.query() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#query-property)
+
+Like [scanStream](#methods-scanstream), but for queries.
+
+---
+
+<a name="methods-querystreamsync"></a>
+### queryStreamSync(params)
+
+- **params** - [AWS.DynamoDB.DocumentClient.query() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#query-property)
+
+Like [scanStreamSync](#methods-scanstreamsync), but for queries.
+
+---
+
 ## New methods for scan()
 
 We've supercharged _scan()_ for those times when you want to recurse through entire tables.
 
 <a name="methods-scanall"></a>
 ### scanAll(params)
+
+Resolves with the entire array of matching items.
 
 - **params** - [AWS.DynamoDB.DocumentClient.scan() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property)
 
@@ -128,6 +177,8 @@ emitter.on('items', async (items) => {
   // Once the Promise.all resolves, scanStreamSync() will automatically request the next batch.
 })
 ```
+
+---
 
 # FAQ
 

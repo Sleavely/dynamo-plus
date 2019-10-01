@@ -6,6 +6,9 @@ const {
   retryableExceptions,
 } = require('./retryableExceptions')
 const {
+  appendQueryExtensions,
+} = require('./queryExtensions')
+const {
   appendScanExtensions,
 } = require('./scanExtensions')
 
@@ -13,6 +16,7 @@ const clientConstructor = (options = {}) => {
   const dynamoClient = new DynamoDB.DocumentClient(options)
   promisifyDocumentClient(dynamoClient)
   autoRetry(dynamoClient)
+  appendQueryExtensions(dynamoClient)
   appendScanExtensions(dynamoClient)
   return dynamoClient
 }

@@ -1,26 +1,17 @@
 
+/**
+ * @typedef { import('aws-sdk') } AWS
+ */
+
 const { EventEmitter } = require('events')
 const allListeners = require('./utils/allListeners')
+const recursor = require('./utils/recursor')
 
-/**
- * recursion
- * /rɪˈkəːʃ(ə)n/
- *
- * Did you mean: Recursion
- *
- * @see https://www.google.com/search?q=Recursion
- */
 const scanRecursor = async (passalongs, chunkCallback) => {
-  const { client, scanParams } = passalongs
-
-  const data = await client.scan(scanParams)
-  await chunkCallback(data)
-
-  // continue scanning if we have more items
-  if (data.LastEvaluatedKey) {
-    scanParams.ExclusiveStartKey = data.LastEvaluatedKey
-    scanRecursor(passalongs, chunkCallback)
-  }
+  passalongs.method = 'scan'
+  passalongs.params = passalongs.scanParams
+  delete passalongs.scanParams
+  return recursor(passalongs, chunkCallback)
 }
 
 const scanEmitter = (client, scanParams, parallelScans, synchronous = false) => {
@@ -59,7 +50,7 @@ exports.appendScanExtensions = (client) => {
   /**
    * Scan a table into memory.
    *
-   * @param {DynamoDB.Types.ScanInput}
+   * @param {AWS.DynamoDB.DocumentClient.ScanInput} scanParams
    * @returns {Promise<Array>} Resolves with an array of Items
    */
   client.scanAll = async (scanParams = {}) => {
@@ -83,7 +74,7 @@ exports.appendScanExtensions = (client) => {
    * datasets that wont fit in memory but don't want to
    * implement your own pagination to deal with chunks.
    *
-   * @param {DynamoDB.Types.ScanInput}
+   * @param {AWS.DynamoDB.DocumentClient.ScanInput} scanParams
    * @param {Number} parallelScans
    * @returns {EventEmitter} emits "data", "items", "done" and "error" events
    */
@@ -95,7 +86,7 @@ exports.appendScanExtensions = (client) => {
    * Similar to stream, but waits for all eventlisteners to resolve before recursing the next batch.
    * If parallel scanning is in effect, the synchronisity will only apply on a per-segment basis.
    *
-   * @param {DynamoDB.Types.ScanInput}
+   * @param {AWS.DynamoDB.DocumentClient.ScanInput} scanParams
    * @param {Number} parallelScans
    * @returns {EventEmitter} emits "data", "items", "done" and "error" events
    */
