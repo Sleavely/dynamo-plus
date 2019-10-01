@@ -60,7 +60,7 @@ If you want to use a delay from the beginning, set `lastBackOff` to a millisecon
 
 batchWrite is neat for inserting multiple documents at once, but it requires you to handle chunking and unprocessed items yourself, while also using it's own syntax. We've added putAll() to do the heavy lifting for you.
 
-<a name="methods-queryall"></a>
+<a name="methods-putall"></a>
 ### putAll(params)
 
 _batchWrite_, but with the simple syntax of _put_.
