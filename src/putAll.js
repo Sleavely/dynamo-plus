@@ -18,7 +18,7 @@ exports.batchWriteRetry = async (client, writeParams) => {
   const { UnprocessedItems = {} } = await client.batchWrite(writeParams)
 
   if (Object.keys(UnprocessedItems).length) {
-    return exports.batchWrite({ RequestItems: UnprocessedItems })
+    return exports.batchWriteRetry(client, { RequestItems: UnprocessedItems })
   }
 }
 

@@ -31,23 +31,36 @@ describe('batchWriteRetry()', () => {
   it('returns a Promise', async () => {
     const client = mockClient()
 
-    expect(batchWriteRetry(client, { TableName: 'Area51', Items: [] })).toBeInstanceOf(Promise)
+    expect(batchWriteRetry(client)).toBeInstanceOf(Promise)
   })
 
   it('forwards params to the client', async () => {
     const client = mockClient()
-    client.mockReference.mockResolvedValueOnce({ UnprocessedItems: { TableNameHere: {} } })
-    const params = { TableName: 'Area51', Items: [] }
-    batchWriteRetry(client, params)
+
+    const TableName = 'Area51'
+    const params = { RequestItems: { [TableName]: [] } }
+    await batchWriteRetry(client, params)
 
     expect(client.mockReference).toHaveBeenCalledWith(params)
-    expect(client.mockReference).toHaveBeenCalledTimes(2)
   })
 
   it('retries unprocessed items', async () => {
     const client = mockClient()
-    const params = { TableName: 'Area51', Items: [] }
-    batchWriteRetry(client, params)
+
+    const TableName = 'Area51'
+    const Item = {
+      id: 'foo',
+      name: 'Matthew'
+    }
+    const RequestItems = { [TableName]: [{ PutRequest: { Item } }] }
+
+    // Make sure it fails once.
+    client.mockReference.mockResolvedValueOnce({ UnprocessedItems: RequestItems })
+
+    const params = { RequestItems }
+    await batchWriteRetry(client, params)
+
+    expect(client.mockReference).toHaveBeenCalledTimes(2)
   })
 })
 
