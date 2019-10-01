@@ -31,6 +31,8 @@ const data = await documentClient.get(regularDynamoParams)
 
 - automatically appends .promise()
 - automatically retries and backs off when you get throttled
+- new method for performing putItem in chunks
+  - [putAll(params)](#methods-putall)
 - new methods for query operations
   - [queryAll(params)](#methods-queryall)
   - [queryStream(params)](#methods-querystream)
@@ -53,6 +55,19 @@ Whenever a query fails for reasons such as `LimitExceededException` the promise 
 For information about retryable exceptions, see https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.MessagesAndCodes
 
 If you want to use a delay from the beginning, set `lastBackOff` to a millisecond value in the query params.
+
+## New method for performing putItem in chunks
+
+batchWrite is neat for inserting multiple documents at once, but it requires you to handle chunking and unprocessed items yourself, while also using it's own syntax. We've added putAll() to do the heavy lifting for you.
+
+<a name="methods-queryall"></a>
+### putAll(params)
+
+Similar to _batchWrite_, but with the simple syntax of _put_.
+
+- **params** - `{ TableName: 'myTable', Items: [], BatchSize: 25 }`
+
+---
 
 ## New methods for query()
 
