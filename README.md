@@ -63,9 +63,22 @@ batchWrite is neat for inserting multiple documents at once, but it requires you
 <a name="methods-queryall"></a>
 ### putAll(params)
 
-Similar to _batchWrite_, but with the simple syntax of _put_.
+_batchWrite_, but with the simple syntax of _put_.
 
-- **params** - `{ TableName: 'myTable', Items: [], BatchSize: 25 }`
+- **params** `Object`
+  - **TableName**
+  - **Items** - An array of documents equivalent to `Item` in _put()_.
+  - **BatchSize** - Optional custom batch size. Defaults to 25.
+
+_putAll()_ does not return any data once it resolves.
+
+```js
+const params = {
+  TableName: 'Woop woop!',
+  Items: [{ a: 'b' }, { c: 'd' }]
+}
+await documentClient.putAll(params)
+```
 
 ---
 
