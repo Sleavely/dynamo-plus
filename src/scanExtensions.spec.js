@@ -185,6 +185,28 @@ describe.each(['scanStream', 'scanStreamSync'])('%s()', (streamMethod) => {
     }, 10)
   })
 
+  it('sends option overrides to the various segments', (done) => {
+    expect.hasAssertions()
+    const client = mockClient()
+    appendScanExtensions(client)
+
+    const parallelScanOptions = [
+      {
+        LastEvaluatedKey: { foo: 'bar' }
+      },
+      {
+        LastEvaluatedKey: { hello: 'world' }
+      }
+    ]
+    client[streamMethod]({}, parallelScanOptions)
+
+    setTimeout(() => {
+      expect(client.mockReference).toHaveBeenCalledTimes(parallelScanOptions.length)
+      expect(client.scan.mock.toHaveBeenNthCalledWith(2, parallelScanOptions[1]))
+      done()
+    })
+  })
+
   it('only emits done when all segments have completed', (done) => {
     expect.hasAssertions()
     const client = mockClient()
