@@ -1,8 +1,4 @@
 
-/**
- * @typedef { import('aws-sdk') } AWS
- */
-
 const { EventEmitter } = require('events')
 const allListeners = require('./utils/allListeners')
 const recursor = require('./utils/recursor')
@@ -47,12 +43,6 @@ const scanEmitter = (client, scanParams, parallelScans, synchronous = false) => 
 }
 
 exports.appendScanExtensions = (client) => {
-  /**
-   * Scan a table into memory.
-   *
-   * @param {AWS.DynamoDB.DocumentClient.ScanInput} scanParams
-   * @returns {Promise<Array>} Resolves with an array of Items
-   */
   client.scanAll = async (scanParams = {}) => {
     return new Promise((resolve, reject) => {
       const items = []
@@ -67,29 +57,10 @@ exports.appendScanExtensions = (client) => {
     })
   }
 
-  /**
-   * Returns an EventEmitter that you can subscribe on to be
-   * notified of each batch of items from the table. This is
-   * an especially useful feature when dealing with enormous
-   * datasets that wont fit in memory but don't want to
-   * implement your own pagination to deal with chunks.
-   *
-   * @param {AWS.DynamoDB.DocumentClient.ScanInput} scanParams
-   * @param {Number} parallelScans
-   * @returns {EventEmitter} emits "data", "items", "done" and "error" events
-   */
   client.scanStream = (scanParams = {}, parallelScans = 1) => {
     return scanEmitter(client, scanParams, parallelScans)
   }
 
-  /**
-   * Similar to stream, but waits for all eventlisteners to resolve before recursing the next batch.
-   * If parallel scanning is in effect, the synchronisity will only apply on a per-segment basis.
-   *
-   * @param {AWS.DynamoDB.DocumentClient.ScanInput} scanParams
-   * @param {Number} parallelScans
-   * @returns {EventEmitter} emits "data", "items", "done" and "error" events
-   */
   client.scanStreamSync = (scanParams = {}, parallelScans = 1) => {
     return scanEmitter(client, scanParams, parallelScans, true)
   }
