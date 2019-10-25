@@ -67,13 +67,13 @@ export class DynamoPlusClient extends DocumentClient {
    * datasets that wont fit in memory but don't want to
    * implement your own pagination to deal with chunks.
    */
-  scanStream(params: DocumentClient.ScanInput, parallelScans: number): ScanEmitter
+  scanStream(params: DocumentClient.ScanInput, parallelScans: number | AWS.DynamoDB.DocumentClient.ScanInput[]): ScanEmitter
 
   /**
    * Similar to stream, but waits for all eventlisteners to resolve before recursing the next batch.
    * If parallel scanning is in effect, the synchronisity will only apply on a per-segment basis.
    */
-  scanStreamSync(params: DocumentClient.ScanInput, parallelScans: number): ScanEmitterSynchronous
+  scanStreamSync(params: DocumentClient.ScanInput, parallelScans: number | AWS.DynamoDB.DocumentClient.ScanInput[]): ScanEmitterSynchronous
 
   /**
    * Load all pages from a query into memory.
