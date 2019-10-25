@@ -1,8 +1,4 @@
 
-/**
- * @typedef { import('aws-sdk') } AWS
- */
-
 const { EventEmitter } = require('events')
 const allListeners = require('./utils/allListeners')
 const recursor = require('./utils/recursor')
@@ -36,12 +32,6 @@ const queryEmitter = (client, queryParams, synchronous = false) => {
 }
 
 exports.appendQueryExtensions = (client) => {
-  /**
-   * Query all pages into memory.
-   *
-   * @param {AWS.DynamoDB.DocumentClient.QueryInput} queryParams
-   * @returns {Promise<Array>} Resolves with an array of Items
-   */
   client.queryAll = async (queryParams = {}) => {
     return new Promise((resolve, reject) => {
       const items = []
@@ -56,26 +46,10 @@ exports.appendQueryExtensions = (client) => {
     })
   }
 
-  /**
-   * Returns an EventEmitter that you can subscribe on to be
-   * notified of each batch of matching items from the table.
-   * This is an especially useful feature when dealing with
-   * enormous datasets that wont fit in memory but don't want
-   * to implement your own pagination to deal with chunks.
-   *
-   * @param {AWS.DynamoDB.DocumentClient.QueryInput} queryParams
-   * @returns {EventEmitter} emits "data", "items", "done" and "error" events
-   */
   client.queryStream = (queryParams = {}) => {
     return queryEmitter(client, queryParams)
   }
 
-  /**
-   * Similar to stream, but waits for all eventlisteners to resolve before reading the next page.
-   *
-   * @param {AWS.DynamoDB.DocumentClient.QueryInput} queryParams
-   * @returns {EventEmitter} emits "data", "items", "done" and "error" events
-   */
   client.queryStreamSync = (queryParams = {}) => {
     return queryEmitter(client, queryParams, true)
   }
