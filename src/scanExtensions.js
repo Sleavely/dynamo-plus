@@ -17,13 +17,17 @@ const scanRecursor = async (passalongs, chunkCallback) => {
 const scanEmitter = (client, scanParams, parallelScans, synchronous = false) => {
   const emitter = new EventEmitter()
   let completedParallelScans = 0
-  for (let i = 0; i < parallelScans; i++) {
+
+  // Convert integer values
+  if (!Array.isArray(parallelScans)) parallelScans = Array(parallelScans)
+  for (let i = 0; i < parallelScans.length; i++) {
     // We only want to touch the request if explicitly told to,
     // they could be setting their own values for parallelism.
-    if (parallelScans > 1) {
-      scanParams = { ...scanParams }
+    if (parallelScans.length > 1) {
+      const parallelParams = parallelScans[i] || {}
+      scanParams = { ...scanParams, ...parallelParams }
       scanParams.Segment = i
-      scanParams.TotalSegments = parallelScans
+      scanParams.TotalSegments = parallelScans.length
     }
 
     scanRecursor({ client, scanParams }, async (data) => {
@@ -37,7 +41,7 @@ const scanEmitter = (client, scanParams, parallelScans, synchronous = false) => 
 
       if (!data.LastEvaluatedKey) {
         completedParallelScans++
-        if (completedParallelScans === parallelScans) emitter.emit('done')
+        if (completedParallelScans === parallelScans.length) emitter.emit('done')
       }
     }).catch((err) => {
       emitter.emit('error', err)
@@ -75,7 +79,7 @@ exports.appendScanExtensions = (client) => {
    * implement your own pagination to deal with chunks.
    *
    * @param {AWS.DynamoDB.DocumentClient.ScanInput} scanParams
-   * @param {Number} parallelScans
+   * @param {Number | AWS.DynamoDB.DocumentClient.ScanInput[]} parallelScans
    * @returns {EventEmitter} emits "data", "items", "done" and "error" events
    */
   client.scanStream = (scanParams = {}, parallelScans = 1) => {
@@ -87,7 +91,7 @@ exports.appendScanExtensions = (client) => {
    * If parallel scanning is in effect, the synchronisity will only apply on a per-segment basis.
    *
    * @param {AWS.DynamoDB.DocumentClient.ScanInput} scanParams
-   * @param {Number} parallelScans
+   * @param {Number | AWS.DynamoDB.DocumentClient.ScanInput[]} parallelScans
    * @returns {EventEmitter} emits "data", "items", "done" and "error" events
    */
   client.scanStreamSync = (scanParams = {}, parallelScans = 1) => {
