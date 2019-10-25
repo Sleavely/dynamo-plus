@@ -185,26 +185,41 @@ describe.each(['scanStream', 'scanStreamSync'])('%s()', (streamMethod) => {
     }, 10)
   })
 
+  it('accepts an array and uses the length to determine # of segments', (done) => {
+    expect.hasAssertions()
+    const client = mockClient()
+    appendScanExtensions(client)
+
+    const parallelScanOptions = [
+      { LastEvaluatedKey: { foo: 'bar' } },
+      { LastEvaluatedKey: { hello: 'world' } }
+    ]
+    client[streamMethod]({}, parallelScanOptions)
+
+    setTimeout(() => {
+      expect(client.mockReference).toHaveBeenCalledTimes(parallelScanOptions.length)
+      done()
+    }, 10)
+  })
+
   it('sends option overrides to the various segments', (done) => {
     expect.hasAssertions()
     const client = mockClient()
     appendScanExtensions(client)
 
     const parallelScanOptions = [
-      {
-        LastEvaluatedKey: { foo: 'bar' }
-      },
-      {
-        LastEvaluatedKey: { hello: 'world' }
-      }
+      { LastEvaluatedKey: { foo: 'bar' } },
+      { LastEvaluatedKey: { hello: 'world' } }
     ]
     client[streamMethod]({}, parallelScanOptions)
 
     setTimeout(() => {
       expect(client.mockReference).toHaveBeenCalledTimes(parallelScanOptions.length)
-      expect(client.scan.mock.toHaveBeenNthCalledWith(2, parallelScanOptions[1]))
+      // Since segment info is appended to the actual params, we use toMatchObject()
+      expect(client.mockReference.mock.calls[0][0]).toMatchObject(parallelScanOptions[0])
+      expect(client.mockReference.mock.calls[1][0]).toMatchObject(parallelScanOptions[1])
       done()
-    })
+    }, 10)
   })
 
   it('only emits done when all segments have completed', (done) => {
