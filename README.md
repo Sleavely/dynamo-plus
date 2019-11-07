@@ -31,7 +31,8 @@ const data = await documentClient.get(regularDynamoParams)
 
 - automatically appends .promise()
 - automatically retries and backs off when you get throttled
-- new method for performing putItem in chunks
+- new methods for performing batchWrite requests in chunks
+  - [deleteAll(params)](#methods-deleteall)
   - [putAll(params)](#methods-putall)
 - new methods for query operations
   - [queryAll(params)](#methods-queryall)
@@ -56,19 +57,41 @@ For information about retryable exceptions, see https://docs.aws.amazon.com/amaz
 
 If you want to use a delay from the beginning, set `lastBackOff` to a millisecond value in the query params.
 
-## New method for performing putItem in chunks
+## New methods for performing batchWrite requests in chunks
 
-batchWrite is neat for inserting multiple documents at once, but it requires you to handle chunking and unprocessed items yourself, while also using it's own syntax. We've added putAll() to do the heavy lifting for you.
+batchWrite is neat for inserting multiple documents at once, but it requires you to handle chunking and unprocessed items yourself, while also using it's own somewhat unique syntax. We've added deleteAll() and putAll() to do the heavy lifting for you.
+
+<a name="methods-deleteall"></a>
+### deleteAll(params)
+
+_batchWrite_ deletions, but with the simple syntax of _delete_.
+
+- **params** `Object`
+  - **TableName**
+  - **Keys** - An array of key objects equivalent to `Key` in _delete()_.
+  - **BatchSize** - Optional custom batch size. Defaults to 25 which the maximum permitted value by DynamoDB.
+
+_deleteAll()_ does not return any data once it resolves.
+
+```js
+const params = {
+  TableName: 'Woop woop!',
+  Keys: [{ userId: '123' }, { userId: 'abc' }]
+}
+await documentClient.deleteAll(params)
+```
+
+---
 
 <a name="methods-putall"></a>
 ### putAll(params)
 
-_batchWrite_, but with the simple syntax of _put_.
+_batchWrite_ upserts, but with the simple syntax of _put_.
 
 - **params** `Object`
   - **TableName**
   - **Items** - An array of documents equivalent to `Item` in _put()_.
-  - **BatchSize** - Optional custom batch size. Defaults to 25.
+  - **BatchSize** - Optional custom batch size. Defaults to 25 which the maximum permitted value by DynamoDB.
 
 _putAll()_ does not return any data once it resolves.
 
