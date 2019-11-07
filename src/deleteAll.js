@@ -2,15 +2,15 @@
 const batchWriteRetry = require('./utils/batchWriteRetry')
 const chunk = require('./utils/chunk')
 
-exports.appendPutAll = (client) => {
-  client.putAll = async (params = {}) => {
+exports.appendDeleteAll = (client) => {
+  client.deleteAll = async (params = {}) => {
     const {
       TableName = '',
-      Items = [],
+      Keys = [],
       BatchSize = 25,
     } = params
 
-    const batches = chunk(Items, BatchSize)
+    const batches = chunk(Keys, BatchSize)
 
     // Build a chain of batchWrite operations
     return batches.reduce(async (chain, batch) => {
@@ -18,7 +18,7 @@ exports.appendPutAll = (client) => {
 
       return batchWriteRetry(client, {
         RequestItems: {
-          [TableName]: batch.map((item) => ({ PutRequest: { Item: item } }))
+          [TableName]: batch.map((key) => ({ DeleteRequest: { Key: key } }))
         }
       })
     }, Promise.resolve())
