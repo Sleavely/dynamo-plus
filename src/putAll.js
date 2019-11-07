@@ -1,13 +1,6 @@
 
+const batchWriteRetry = require('./utils/batchWriteRetry')
 const chunk = require('./utils/chunk')
-
-exports.batchWriteRetry = async (client, writeParams) => {
-  const { UnprocessedItems = {} } = await client.batchWrite(writeParams)
-
-  if (Object.keys(UnprocessedItems).length) {
-    return exports.batchWriteRetry(client, { RequestItems: UnprocessedItems })
-  }
-}
 
 exports.appendPutAll = (client) => {
   client.putAll = async (params = {}) => {
@@ -23,7 +16,7 @@ exports.appendPutAll = (client) => {
     return batches.reduce(async (chain, batch) => {
       await chain
 
-      return exports.batchWriteRetry(client, {
+      return batchWriteRetry(client, {
         RequestItems: {
           [TableName]: batch.map((item) => ({ PutRequest: { Item: item } }))
         }
