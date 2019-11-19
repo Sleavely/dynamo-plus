@@ -33,10 +33,10 @@ const queryEmitter = (client, queryParams, synchronous = false) => {
 
 exports.appendQueryExtensions = (client) => {
   client.queryAll = async (queryParams = {}) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const items = []
       try {
-        queryRecursor({ client, queryParams }, async (data) => {
+        await queryRecursor({ client, queryParams }, async (data) => {
           data.Items.forEach(item => items.push(item))
           if (!data.LastEvaluatedKey) resolve(items)
         })

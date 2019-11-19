@@ -48,10 +48,10 @@ const scanEmitter = (client, scanParams, parallelScans, synchronous = false) => 
 
 exports.appendScanExtensions = (client) => {
   client.scanAll = async (scanParams = {}) => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const items = []
       try {
-        scanRecursor({ client, scanParams }, async (data) => {
+        await scanRecursor({ client, scanParams }, async (data) => {
           data.Items.forEach(item => items.push(item))
           if (!data.LastEvaluatedKey) resolve(items)
         })
