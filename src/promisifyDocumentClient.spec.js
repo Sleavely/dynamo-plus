@@ -3,7 +3,7 @@ jest.doMock('./clientMethods', () => ['foo', 'bar'])
 const methods = require('./clientMethods')
 
 const mockClient = (method = 'attack') => ({
-  [method]: () => ({ promise: async () => 1337 })
+  [method]: () => ({ promise: async () => 1337 }),
 })
 
 const promisifyDocumentClient = require('./promisifyDocumentClient')

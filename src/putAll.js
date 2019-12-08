@@ -25,8 +25,8 @@ exports.appendPutAll = (client) => {
 
       return exports.batchWriteRetry(client, {
         RequestItems: {
-          [TableName]: batch.map((item) => ({ PutRequest: { Item: item } }))
-        }
+          [TableName]: batch.map((item) => ({ PutRequest: { Item: item } })),
+        },
       })
     }, Promise.resolve())
   }

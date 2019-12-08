@@ -192,7 +192,7 @@ describe.each(['scanStream', 'scanStreamSync'])('%s()', (streamMethod) => {
 
     const parallelScanOptions = [
       { LastEvaluatedKey: { foo: 'bar' } },
-      { LastEvaluatedKey: { hello: 'world' } }
+      { LastEvaluatedKey: { hello: 'world' } },
     ]
     client[streamMethod]({}, parallelScanOptions)
 
@@ -209,7 +209,7 @@ describe.each(['scanStream', 'scanStreamSync'])('%s()', (streamMethod) => {
 
     const parallelScanOptions = [
       { LastEvaluatedKey: { foo: 'bar' } },
-      { LastEvaluatedKey: { hello: 'world' } }
+      { LastEvaluatedKey: { hello: 'world' } },
     ]
     client[streamMethod]({}, parallelScanOptions)
 
@@ -259,7 +259,7 @@ describe('scanStream()', () => {
     const mockImplementations = [
       async () => ({ Items: [{ time: Date.now() }], LastEvaluatedKey: 'Fruits' }),
       async () => { return new Promise((resolve) => { setTimeout(() => resolve(Date.now()), 25) }) },
-      async () => ({ Items: [{ time: Date.now() }] })
+      async () => ({ Items: [{ time: Date.now() }] }),
     ]
     mockImplementations.forEach((func) => client.mockReference.mockImplementationOnce(func))
 
@@ -298,7 +298,7 @@ describe('scanStreamSync()', () => {
     const mockImplementations = [
       async () => ({ Items: [{ name: 'Apple' }], LastEvaluatedKey: 'Fruits' }),
       async () => { return new Promise((resolve) => { setTimeout(resolve, 100) }) },
-      async () => ({ Items: [{ name: 'Samsung' }] })
+      async () => ({ Items: [{ name: 'Samsung' }] }),
     ]
     mockImplementations.forEach((func) => client.mockReference.mockImplementationOnce(func))
 

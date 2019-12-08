@@ -27,5 +27,5 @@ const clientConstructor = (options = {}) => {
 
 module.exports = exports = {
   DynamoPlus: clientConstructor,
-  retryableExceptions
+  retryableExceptions,
 }

@@ -182,7 +182,7 @@ describe('queryStream()', () => {
     const mockImplementations = [
       async () => ({ Items: [{ time: Date.now() }], LastEvaluatedKey: 'Fruits' }),
       async () => { return new Promise((resolve) => { setTimeout(() => resolve(Date.now()), 25) }) },
-      async () => ({ Items: [{ time: Date.now() }] })
+      async () => ({ Items: [{ time: Date.now() }] }),
     ]
     mockImplementations.forEach((func) => client.mockReference.mockImplementationOnce(func))
 
@@ -221,7 +221,7 @@ describe('queryStreamSync()', () => {
     const mockImplementations = [
       async () => ({ Items: [{ name: 'Apple' }], LastEvaluatedKey: 'Fruits' }),
       async () => { return new Promise((resolve) => { setTimeout(resolve, 100) }) },
-      async () => ({ Items: [{ name: 'Samsung' }] })
+      async () => ({ Items: [{ name: 'Samsung' }] }),
     ]
     mockImplementations.forEach((func) => client.mockReference.mockImplementationOnce(func))
 

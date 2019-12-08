@@ -1,10 +1,7 @@
 {
   "extends": "standard",
   "rules": {
-    "comma-dangle": [
-      "warn",
-      "only-multiline"
-    ],
+    "comma-dangle": ["error", "always-multiline"],
     "no-trailing-spaces": "error"
   },
   "env": {
