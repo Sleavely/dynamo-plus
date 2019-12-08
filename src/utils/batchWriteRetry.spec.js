@@ -33,7 +33,7 @@ describe('batchWriteRetry()', () => {
     const TableName = 'Area51'
     const Item = {
       id: 'foo',
-      name: 'Matthew'
+      name: 'Matthew',
     }
     const RequestItems = { [TableName]: [{ PutRequest: { Item } }] }
 

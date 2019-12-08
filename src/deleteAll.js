@@ -18,8 +18,8 @@ exports.appendDeleteAll = (client) => {
 
       return batchWriteRetry(client, {
         RequestItems: {
-          [TableName]: batch.map((key) => ({ DeleteRequest: { Key: key } }))
-        }
+          [TableName]: batch.map((key) => ({ DeleteRequest: { Key: key } })),
+        },
       })
     }, Promise.resolve())
   }

@@ -2,7 +2,7 @@
 jest.doMock('aws-sdk/clients/dynamodb', () => ({
   DocumentClient: function () {
     return mockClient()
-  }
+  },
 }))
 
 const { DynamoPlus } = require('./index')
