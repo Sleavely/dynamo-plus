@@ -5,6 +5,7 @@ const sleep = require('./utils/sleep')
 // Throttling-related exceptions
 // https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.MessagesAndCodes
 const retryableExceptions = [
+  'InternalServerError',
   'LimitExceededException',
   'ProvisionedThroughputExceededException',
   'RequestLimitExceeded',
