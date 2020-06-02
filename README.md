@@ -1,4 +1,4 @@
-# ![Dynamo Plus](logo.png)
+# ![Dynamo Plus](logo.svg)
 
 [ ![npm version](https://img.shields.io/npm/v/dynamo-plus.svg?style=flat) ](https://npmjs.org/package/dynamo-plus "View this project on npm") [ ![CircleCI](https://img.shields.io/circleci/build/github/Sleavely/dynamo-plus?token=17812f5feb6c6923284f9df096227fa6f9256009) ](https://circleci.com/gh/Sleavely/dynamo-plus) [ ![Issues](https://img.shields.io/github/issues/Sleavely/dynamo-plus.svg) ](https://github.com/Sleavely/dynamo-plus/issues)
 
