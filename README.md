@@ -31,6 +31,8 @@ const data = await documentClient.get(regularDynamoParams)
 
 - automatically appends .promise()
 - automatically retries and backs off when you get throttled
+- new method for performing batchGet requests in chunks
+  - [getAll(params)](#methods-getall)
 - new methods for performing batchWrite requests in chunks
   - [deleteAll(params)](#methods-deleteall)
   - [putAll(params)](#methods-putall)
@@ -56,6 +58,32 @@ Whenever a query fails for reasons such as `LimitExceededException` the promise 
 For information about retryable exceptions, see https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.MessagesAndCodes
 
 If you want to use a delay from the beginning, set `lastBackOff` to a millisecond value in the query params.
+
+## New method for performing batchGet requests in chunks
+
+The built-in _batchRead_ method can be used for fetching multiple documents by their primary keys, but it requires you to handle chunking and unprocessed items yourself. DynamoPlus adds a _getAll_ method that does the heavy lifting for you.
+
+<a name="methods-getall"></a>
+### getAll(params)
+
+It's like _batchGet_, but with the simple syntax of _get_.
+
+- **params** `Object`
+  - **TableName**
+  - **Keys** - An array of key objects equivalent to `Key` in _get()_.
+  - **BatchSize** - Optional custom batch size. Defaults to 100 which the maximum permitted value by DynamoDB.
+
+_getAll()_ returns
+
+```js
+const params = {
+  TableName: 'users',
+  Keys: [{ userId: '1' }, { userId: '2' }, /* ... */ { userId: '999' }]
+}
+
+const response = await documentClient.getAll(params)
+// response now contains ALL documents, not just the first 100
+```
 
 ## New methods for performing batchWrite requests in chunks
 

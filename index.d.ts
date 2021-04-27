@@ -49,6 +49,13 @@ export class DynamoPlusClient extends DocumentClient {
   // -- Custom methods  w/ handcrafted typings below this line. --
 
   /**
+   * Similar to get(), but takes a Keys array pointing to multiple documents to be removed.
+   *
+   * It will automatically perform an unlimited amount of batchWrite() requests until the list has been processed.
+   */
+   getAll(params: GetAllRequest): Promise<DocumentClient.ItemList>
+
+  /**
    * Similar to delete(), but takes a Keys array pointing to multiple documents to be removed.
    *
    * It will automatically perform an unlimited amount of batchWrite() requests until the list has been processed.
@@ -100,6 +107,20 @@ export class DynamoPlusClient extends DocumentClient {
    * Similar to queryStream(), but waits for all eventlisteners to resolve before reading the next page.
    */
   queryStreamSync(params: DocumentClient.QueryInput): QueryEmitterSynchronous
+}
+
+export interface GetAllRequest {
+  TableName: string
+
+  /**
+   * An unlimited amount of keys to fetch.
+   */
+  Keys: DocumentClient.Key[]
+
+  /**
+   * The amount of requests to write per batch. Defaults to the DynamoDB maximum of 100.
+   */
+  BatchSize: Number
 }
 
 export interface DeleteAllRequest {
