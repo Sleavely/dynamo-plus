@@ -6,6 +6,9 @@ const {
   retryableExceptions,
 } = require('./retryableExceptions')
 const {
+  appendGetAll,
+} = require('./getAll')
+const {
   appendDeleteAll,
 } = require('./deleteAll')
 const {
@@ -22,6 +25,7 @@ const clientConstructor = (options = {}) => {
   const dynamoClient = new DynamoDB.DocumentClient(options)
   promisifyDocumentClient(dynamoClient)
   autoRetry(dynamoClient)
+  appendGetAll(dynamoClient)
   appendDeleteAll(dynamoClient)
   appendPutAll(dynamoClient)
   appendQueryExtensions(dynamoClient)
