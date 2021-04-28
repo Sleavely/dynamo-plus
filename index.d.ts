@@ -1,6 +1,4 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb'
-import { on } from 'cluster';
-import { appendPutAll } from './src/putAll';
+import DynamoDB, { DocumentClient } from 'aws-sdk/clients/dynamodb'
 
 export class DynamoPlusClient extends DocumentClient {
   /**
