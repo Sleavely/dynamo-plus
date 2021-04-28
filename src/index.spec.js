@@ -18,9 +18,26 @@ it('has DynamoPlus property', () => {
   expect(dp).toHaveProperty('DynamoPlus')
 })
 
-it('DynamoPlus() returns a new DocumentClient', () => {
-  const { DynamoPlus } = requireUncached(`./index`)
-  const client = DynamoPlus()
+describe('DynamoPlus', () => {
+  it('returns a new DocumentClient', () => {
+    const { DynamoPlus } = requireUncached(`./index`)
 
-  expect(client.constructor.name).toBe('DocumentClient')
+    const client = DynamoPlus()
+
+    expect(client.constructor.name).toBe('DocumentClient')
+  })
+  it('allows custom options', () => {
+    const { DynamoPlus } = requireUncached(`./index`)
+
+    const client = DynamoPlus({ potato: 'Hello' })
+
+    expect(client.service.config.potato).toBe('Hello')
+  })
+  it('defaults to a keepalive-enabled http agent', () => {
+    const { DynamoPlus } = requireUncached(`./index`)
+
+    const client = DynamoPlus()
+
+    expect(client.service.config.httpOptions).toMatchObject({ agent: { keepAlive: true } })
+  })
 })

@@ -1,4 +1,5 @@
 
+const https = require('https')
 const DynamoDB = require('aws-sdk/clients/dynamodb')
 const promisifyDocumentClient = require('./promisifyDocumentClient')
 const {
@@ -22,7 +23,19 @@ const {
 } = require('./scanExtensions')
 
 const clientConstructor = (options = {}) => {
-  const dynamoClient = new DynamoDB.DocumentClient(options)
+  const keepaliveAgent = new https.Agent({
+    keepAlive: true,
+  })
+  const clientOptions = {
+    ...options,
+    httpOptions: {
+      agent: keepaliveAgent,
+      // Allow users to supply their own agent
+      ...(options.httpOptions || {}),
+    },
+  }
+
+  const dynamoClient = new DynamoDB.DocumentClient(clientOptions)
   promisifyDocumentClient(dynamoClient)
   autoRetry(dynamoClient)
   appendGetAll(dynamoClient)
@@ -30,6 +43,7 @@ const clientConstructor = (options = {}) => {
   appendPutAll(dynamoClient)
   appendQueryExtensions(dynamoClient)
   appendScanExtensions(dynamoClient)
+
   return dynamoClient
 }
 
