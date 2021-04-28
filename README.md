@@ -30,6 +30,7 @@ const data = await documentClient.get(regularDynamoParams)
 # Features
 
 - automatically appends .promise()
+- automatically enables HTTP keep-alive
 - automatically retries and backs off when you get throttled
 - new method for performing batchGet requests in chunks
   - [getAll(params)](#methods-getall)
@@ -47,9 +48,13 @@ const data = await documentClient.get(regularDynamoParams)
 
 ## Promises by default
 
-The DynamoPlus client will automatically append `.promise()` for you, making all methods awaitable by default.
+The DynamoPlus client will automatically append `.promise()` for you, making all methods `await`able by default.
 
 When the client is instantiated, the original methods are prefixed and accessible through e.g. ``original_${method}``
+
+## HTTP keep-alive by default
+
+Setting up TCP connections is slow and costly, especially when you need to perform multiple operations in a row. Enabling HTTP keep-alive can reduce latency by [up to 70%](https://theburningmonk.com/2019/02/lambda-optimization-tip-enable-http-keep-alive/), but the v2 SDK doesn't enable it by default. DynamoPlus takes care of the boilerplate for you.
 
 ## Retries and backoff
 
