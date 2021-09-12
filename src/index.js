@@ -23,9 +23,14 @@ const {
 } = require('./scanExtensions')
 
 const clientConstructor = (options = {}) => {
-  const keepaliveAgent = new https.Agent({
-    keepAlive: true,
-  })
+  // Only inject our custom agent with HTTP keep-alive if user hasn't manually defined endpoint or agent
+  let keepaliveAgent
+  if (!options.endpoint) {
+    keepaliveAgent = new https.Agent({
+      keepAlive: true,
+    })
+  }
+
   const clientOptions = {
     ...options,
     httpOptions: {
