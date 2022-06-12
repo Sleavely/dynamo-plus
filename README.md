@@ -268,7 +268,7 @@ emitter.on('items', async (items) => {
 
 ### I'm getting errors that the `aws-sdk` module isn't installed.
 
-`aws-sdk` is set as a dev-dependency since it is pretty large and installed by default on AWS Lambda.
+`aws-sdk` is specified as a [peer dependency](https://docs.npmjs.com/cli/v8/configuring-npm/package-json#peerdependencies) since it is pretty large and installed by default on AWS Lambda.
 
 ### I need to use the regular client methods for some edge case.
 
