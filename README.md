@@ -31,7 +31,8 @@ const data = await documentClient.get(regularDynamoParams)
 
 - automatically appends .promise()
 - automatically enables HTTP keep-alive
-- automatically retries and backs off when you get throttled
+- improves stack traces to help identify user errors
+- retries and backs off when you get throttled
 - new method for performing batchGet requests in chunks
   - [getAll(params)](#methods-getall)
 - new methods for performing batchWrite requests in chunks
