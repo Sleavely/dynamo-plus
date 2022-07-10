@@ -16,7 +16,12 @@ const promisifyDocumentClient = (client) => {
 
     client[`original_${method}`] = client[method]
     client[method] = async (params = {}) => {
-      return client[`original_${method}`](params).promise()
+      return client[`original_${method}`](params)
+        .promise()
+        .catch(err => {
+          err.stack = (new err.constructor(err.message).stack)
+          throw err
+        })
     }
   })
 }
