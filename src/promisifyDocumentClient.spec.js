@@ -28,3 +28,19 @@ it.each(methods)('proxies calls to original_%s()', async (method) => {
 
   expect(client[`original_${method}`]).toHaveBeenCalled()
 })
+
+it.each(methods)('errors from original_%s() include accurate stack traces', async (method) => {
+  const client = mockClient(method)
+  promisifyDocumentClient(client)
+
+  const err = new Error('What have you done?')
+
+  client[`original_${method}`] = jest.fn(() => ({ promise: async () => {
+    throw err
+  } }))
+
+  const thrownError = await client[method]().catch(err => err)
+  const thrownStack = thrownError.stack.split('\n')
+
+  expect(thrownStack[1]).toMatch(/promisifyDocumentClient\.js/)
+})
