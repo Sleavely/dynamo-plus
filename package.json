@@ -1,6 +1,6 @@
 {
   "name": "dynamo-plus",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "description": "dynamo-plus",
   "main": "./src/index.js",
   "types": "./index.d.ts",
