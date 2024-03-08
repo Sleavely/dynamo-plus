@@ -2,42 +2,39 @@
   "name": "dynamo-plus",
   "version": "1.8.0",
   "description": "dynamo-plus",
-  "main": "./src/index.js",
-  "types": "./index.d.ts",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "logo.svg",
+    "dist/index.js",
+    "dist/index.d.ts"
+  ],
   "scripts": {
-    "test": "jest --verbose --silent && eslint ."
+    "build": "esbuild --outdir=./dist/ ./src/index.ts",
+    "postbuild": "tsc --declaration --emitDeclarationOnly --outdir ./dist/ src/index.ts",
+    "test": "tsc --noEmit && vitest --run --silent && eslint ."
   },
   "keywords": [
     "aws",
     "dynamo",
     "dynamodb",
-    "documentclient",
-    "promises",
-    "retry"
+    "documentclient"
   ],
   "author": "Joakim Hedlund <contact@joakimhedlund.com>",
   "homepage": "https://github.com/Sleavely/dynamo-plus",
   "repository": "github:Sleavely/dynamo-plus",
   "license": "MIT",
   "devDependencies": {
-    "@types/jest": "^24.9.1",
-    "aws-sdk": "^2.639.0",
-    "eslint": "^5.16.0",
-    "eslint-config-standard": "^12.0.0",
-    "eslint-plugin-import": "^2.20.1",
-    "eslint-plugin-node": "^9.2.0",
-    "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1",
-    "jest": "^24.9.0",
-    "jest-extended": "^0.11.5"
+    "@sleavely/eslint-config": "^1.0.1",
+    "aws-sdk-client-mock": "^3.0.1",
+    "aws-sdk-client-mock-jest": "^3.0.1",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.3.0"
   },
-  "peerDependencies": {
-    "aws-sdk": "^2.200.0"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "setupFilesAfterEnv": [
-      "jest-extended"
-    ]
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.515.0",
+    "@aws-sdk/lib-dynamodb": "^3.515.0"
   }
 }
