@@ -1,35 +1,33 @@
-import { it, expect } from 'vitest';
-import { batchWriteRetry } from "./batchWriteRetry"
+import { it, expect } from 'vitest'
+import { mockClient } from 'aws-sdk-client-mock'
+import 'aws-sdk-client-mock-jest'
+import { batchWriteRetry } from './batchWriteRetry'
+import { DynamoPlus } from '..'
+import { BatchWriteCommand } from '@aws-sdk/lib-dynamodb'
 
-const mockClient = (method = 'batchWrite') => {
-  const methodMock = jest.fn(async () => ({ UnprocessedItems: {} }))
-  return {
-    mockReference: methodMock,
-    methodName: method,
-    [method]: methodMock,
-  }
-}
+const dynamoPlus = new DynamoPlus()
+const client = dynamoPlus.client
+const clientMock = mockClient(client)
+
+beforeEach(() => {
+  clientMock.reset()
+  clientMock.on(BatchWriteCommand).resolves({})
+})
 
 describe('batchWriteRetry()', () => {
   it('returns a Promise', async () => {
-    const client = mockClient()
-
-    expect(batchWriteRetry(client)).toBeInstanceOf(Promise)
+    expect(batchWriteRetry(dynamoPlus, { RequestItems: {} })).toBeInstanceOf(Promise)
   })
 
-  it('forwards params to the client', async () => {
-    const client = mockClient()
-
+  it('forwards params to the dynamoPlus', async () => {
     const TableName = 'Area51'
     const params = { RequestItems: { [TableName]: [] } }
-    await batchWriteRetry(client, params)
+    await batchWriteRetry(dynamoPlus, params)
 
-    expect(client.mockReference).toHaveBeenCalledWith(params)
+    expect(clientMock).toHaveReceivedCommandWith(BatchWriteCommand, params)
   })
 
   it('retries unprocessed items', async () => {
-    const client = mockClient()
-
     const TableName = 'Area51'
     const Item = {
       id: 'foo',
@@ -38,11 +36,12 @@ describe('batchWriteRetry()', () => {
     const RequestItems = { [TableName]: [{ PutRequest: { Item } }] }
 
     // Make sure it fails once.
-    client.mockReference.mockResolvedValueOnce({ UnprocessedItems: RequestItems })
+    clientMock.on(BatchWriteCommand)
+      .resolvesOnce({ UnprocessedItems: RequestItems })
 
     const params = { RequestItems }
-    await batchWriteRetry(client, params)
+    await batchWriteRetry(dynamoPlus, params)
 
-    expect(client.mockReference).toHaveBeenCalledTimes(2)
+    expect(clientMock).toHaveReceivedCommandTimes(BatchWriteCommand, 2)
   })
 })

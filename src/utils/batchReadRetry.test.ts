@@ -11,11 +11,11 @@ const clientMock = mockClient(client)
 
 beforeEach(() => {
   clientMock.reset()
+  clientMock.resolves({})
 })
 
 describe('batchReadRetry()', () => {
   it('forwards params to the client', async () => {
-    clientMock.resolves({})
     const TableName = 'Area51'
     const params = { RequestItems: { [TableName]: { Keys: [{ id: '123' }] } } }
     await batchReadRetry(dynamoPlus, params)
