@@ -1,5 +1,7 @@
+import { it, expect } from 'vitest';
+import { batchWriteRetry } from "./batchWriteRetry"
 
-const mockClient = (method = 'batchGet') => {
+const mockClient = (method = 'batchWrite') => {
   const methodMock = jest.fn(async () => ({ UnprocessedItems: {} }))
   return {
     mockReference: methodMock,
@@ -8,13 +10,11 @@ const mockClient = (method = 'batchGet') => {
   }
 }
 
-const batchGetRetry = require('./batchGetRetry')
-
-describe('batchGetRetry()', () => {
+describe('batchWriteRetry()', () => {
   it('returns a Promise', async () => {
     const client = mockClient()
 
-    expect(batchGetRetry(client)).toBeInstanceOf(Promise)
+    expect(batchWriteRetry(client)).toBeInstanceOf(Promise)
   })
 
   it('forwards params to the client', async () => {
@@ -22,12 +22,12 @@ describe('batchGetRetry()', () => {
 
     const TableName = 'Area51'
     const params = { RequestItems: { [TableName]: [] } }
-    await batchGetRetry(client, params)
+    await batchWriteRetry(client, params)
 
     expect(client.mockReference).toHaveBeenCalledWith(params)
   })
 
-  it('retries unprocessed keys', async () => {
+  it('retries unprocessed items', async () => {
     const client = mockClient()
 
     const TableName = 'Area51'
@@ -38,10 +38,10 @@ describe('batchGetRetry()', () => {
     const RequestItems = { [TableName]: [{ PutRequest: { Item } }] }
 
     // Make sure it fails once.
-    client.mockReference.mockResolvedValueOnce({ UnprocessedKeys: RequestItems })
+    client.mockReference.mockResolvedValueOnce({ UnprocessedItems: RequestItems })
 
     const params = { RequestItems }
-    await batchGetRetry(client, params)
+    await batchWriteRetry(client, params)
 
     expect(client.mockReference).toHaveBeenCalledTimes(2)
   })
