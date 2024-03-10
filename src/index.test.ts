@@ -21,7 +21,7 @@ const clientMock = mockClient(client)
 
 beforeEach(() => {
   clientMock.reset()
-  clientMock.onAnyCommand().resolves({})
+  clientMock.resolves({})
 })
 
 describe('batchGet()', () => {
@@ -286,10 +286,38 @@ describe('scan()', () => {
     await dynamoPlus.scan(params)
 
     expect(clientMock).toHaveReceivedCommandWith(ScanCommand, params)
+  })
 })
 
 describe('scanAll()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-scanAll'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    clientMock.on(ScanCommand)
+      .resolvesOnce({ Items: [{ id: 'hello' }] })
+
+    const params = {
+      TableName,
+    }
+    const result = await dynamoPlus.scanAll(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(ScanCommand, params)
+    expect(result).toMatchObject([{ id: 'hello' }])
+  })
+
+  it('automatically iterates multi-page responses', async () => {
+    clientMock.on(ScanCommand)
+      .resolvesOnce({ Items: [{ id: '1' }], LastEvaluatedKey: { id: 'potato' } })
+      .resolvesOnce({ Items: [{ id: '2' }] })
+
+    const params = {
+      TableName,
+    }
+    const result = await dynamoPlus.scanAll(params)
+
+    expect(clientMock).toHaveReceivedCommandTimes(ScanCommand, 2)
+    expect(result).toMatchObject([{ id: '1' }, { id: '2' }])
+  })
 })
 
 describe('scanIterator()', () => {
