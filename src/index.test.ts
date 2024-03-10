@@ -101,7 +101,7 @@ describe('deleteAll()', () => {
 })
 
 describe('get()', () => {
-  test('sends a GetItem command, returning the item', async () => {
+  it('sends a GetItem command, returning the item', async () => {
     const expectedItem = {
       name: 'cheeseburger',
       ingredients: ['bread', 'meat', 'cheese'],
@@ -172,7 +172,14 @@ describe('getAll()', () => {
 })
 
 describe('put()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-put'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = { TableName, Item: { potatoId: '45-C' } }
+    await dynamoPlus.put(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(PutCommand, params)
+  })
 })
 
 describe('putAll()', () => {
@@ -210,11 +217,59 @@ describe('putAll()', () => {
 })
 
 describe('query()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-query'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = {
+      TableName,
+      IndexName: 'profileId-index',
+      KeyConditionExpression: '#id = :id',
+      ExpressionAttributeNames: { '#id': 'profileId' },
+      ExpressionAttributeValues: { ':id': '12345-678-90a-bcdef' },
+    }
+    await dynamoPlus.query(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(QueryCommand, params)
+  })
 })
 
 describe('queryAll()', () => {
-  test.todo('does whatever dynamo-plus does', async () => {})
+  const TableName = 'vitest-table-queryAll'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    clientMock.on(QueryCommand)
+      .resolvesOnce({ Items: [{ id: 'hello' }] })
+
+    const params = {
+      TableName,
+      IndexName: 'profileId-index',
+      KeyConditionExpression: '#id = :id',
+      ExpressionAttributeNames: { '#id': 'profileId' },
+      ExpressionAttributeValues: { ':id': '12345-678-90a-bcdef' },
+    }
+    const result = await dynamoPlus.queryAll(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(QueryCommand, params)
+    expect(result).toMatchObject([{ id: 'hello' }])
+  })
+
+  it('automatically iterates multi-page responses', async () => {
+    clientMock.on(QueryCommand)
+      .resolvesOnce({ Items: [{ id: '1' }], LastEvaluatedKey: { id: 'potato' } })
+      .resolvesOnce({ Items: [{ id: '2' }] })
+
+    const params = {
+      TableName,
+      IndexName: 'profileId-index',
+      KeyConditionExpression: '#id = :id',
+      ExpressionAttributeNames: { '#id': 'profileId' },
+      ExpressionAttributeValues: { ':id': '12345-678-90a-bcdef' },
+    }
+    const result = await dynamoPlus.queryAll(params)
+
+    expect(clientMock).toHaveReceivedCommandTimes(QueryCommand, 2)
+    expect(result).toMatchObject([{ id: '1' }, { id: '2' }])
+  })
 })
 
 describe('queryIterator()', () => {
