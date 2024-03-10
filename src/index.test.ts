@@ -51,6 +51,20 @@ describe('batchWrite()', () => {
   })
 })
 
+describe('delete()', () => {
+  const TableName = 'vitest-table-delete'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = {
+      TableName,
+      Key: { id: 'potato' },
+    }
+    await dynamoPlus.delete(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(DeleteCommand, params)
+  })
+})
+
 describe('deleteAll()', () => {
   const TableName = 'vitest-table-deleteAll'
 

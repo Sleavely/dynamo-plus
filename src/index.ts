@@ -90,7 +90,7 @@ export class DynamoPlus {
       .catch(throwErrorWithCallstack)
   }
 
-  async deleteCommand (input: DeleteCommandInput): Promise<DeleteCommandOutput> {
+  async delete (input: DeleteCommandInput): Promise<DeleteCommandOutput> {
     return await this.client
       .send(new DeleteCommand(input))
       .catch(throwErrorWithCallstack)
