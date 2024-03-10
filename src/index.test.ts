@@ -277,7 +277,15 @@ describe('queryIterator()', () => {
 })
 
 describe('scan()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-scan'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = {
+      TableName,
+    }
+    await dynamoPlus.scan(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(ScanCommand, params)
 })
 
 describe('scanAll()', () => {
