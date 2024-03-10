@@ -2,7 +2,18 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { mockClient } from 'aws-sdk-client-mock'
 import 'aws-sdk-client-mock-jest'
 import { DynamoPlus } from '.'
-import { BatchGetCommand, BatchWriteCommand, GetCommand } from '@aws-sdk/lib-dynamodb'
+import {
+  BatchGetCommand,
+  BatchWriteCommand,
+  DeleteCommand,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+  ScanCommand,
+  TransactGetCommand,
+  TransactWriteCommand,
+  UpdateCommand,
+} from '@aws-sdk/lib-dynamodb'
 
 const dynamoPlus = new DynamoPlus()
 const client = dynamoPlus.client
@@ -10,16 +21,34 @@ const clientMock = mockClient(client)
 
 beforeEach(() => {
   clientMock.reset()
-  clientMock.on(BatchGetCommand).resolves({})
-  clientMock.on(BatchWriteCommand).resolves({})
+  clientMock.onAnyCommand().resolves({})
 })
 
 describe('batchGet()', () => {
-  test.todo('does something', async () => {})
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = { RequestItems: { 'vitest-table-batchGet': { Keys: [{ id: '123' }, { id: '456' }] } } }
+    await dynamoPlus.batchGet(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(BatchGetCommand, params)
+  })
 })
 
 describe('batchWrite()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-batchWrite'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = {
+      RequestItems: {
+        [TableName]: [
+          { DeleteRequest: { Key: { userid: 'potato' } } },
+          { PutRequest: { Item: { userid: 'fries' } } },
+        ],
+      },
+    }
+    await dynamoPlus.batchWrite(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(BatchWriteCommand, params)
+  })
 })
 
 describe('deleteAll()', () => {
