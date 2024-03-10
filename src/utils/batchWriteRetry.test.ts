@@ -1,4 +1,4 @@
-import { it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { mockClient } from 'aws-sdk-client-mock'
 import 'aws-sdk-client-mock-jest'
 import { batchWriteRetry } from './batchWriteRetry'
@@ -11,7 +11,7 @@ const clientMock = mockClient(client)
 
 beforeEach(() => {
   clientMock.reset()
-  clientMock.on(BatchWriteCommand).resolves({})
+  clientMock.resolves({})
 })
 
 describe('batchWriteRetry()', () => {
@@ -38,6 +38,7 @@ describe('batchWriteRetry()', () => {
     // Make sure it fails once.
     clientMock.on(BatchWriteCommand)
       .resolvesOnce({ UnprocessedItems: RequestItems })
+      .resolvesOnce({})
 
     const params = { RequestItems }
     await batchWriteRetry(dynamoPlus, params)
