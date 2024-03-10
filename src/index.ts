@@ -233,7 +233,7 @@ export class DynamoPlus {
   }
 
   async scanAll <ExpectedReturnType = unknown>(params: ScanCommandInput, pageSize = 100): Promise<ExpectedReturnType[]> {
-    const paginator = paginateQuery({ client: this.client, pageSize }, params)
+    const paginator = paginateScan({ client: this.client, pageSize }, params)
     const results = []
     for await (const page of paginator) {
       if (page.Items) results.push(...(page.Items as ExpectedReturnType[]))
