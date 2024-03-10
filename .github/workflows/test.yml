@@ -1,4 +1,4 @@
-name: Transpiling and Linting
+name: Types, Tests and Linting
 
 on:
   push:
