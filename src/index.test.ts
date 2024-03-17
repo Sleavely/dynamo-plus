@@ -388,5 +388,23 @@ describe('transactWrite()', () => {
 })
 
 describe('update()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-update'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = {
+      TableName,
+      Key: { HashKey: 'hashkey' },
+      UpdateExpression: 'set #a = :x + :y',
+      ConditionExpression: '#a < :MAX',
+      ExpressionAttributeNames: { '#a': 'Sum' },
+      ExpressionAttributeValues: {
+        ':x': 20,
+        ':y': 45,
+        ':MAX': 100,
+      },
+    }
+    await dynamoPlus.update(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(UpdateCommand, params)
+  })
 })
