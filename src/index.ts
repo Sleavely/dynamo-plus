@@ -212,15 +212,6 @@ export class DynamoPlus {
     }, Promise.resolve())
   }
 
-  async queryAll <ExpectedReturnType = unknown>(params: QueryCommandInput, pageSize = 100): Promise<ExpectedReturnType[]> {
-    const paginator = paginateQuery({ client: this.client, pageSize }, params)
-    const results = []
-    for await (const page of paginator) {
-      if (page.Items) results.push(...(page.Items as ExpectedReturnType[]))
-    }
-    return results
-  }
-
   async * queryIterator <ExpectedReturnType = unknown>(params: QueryCommandInput, pageSize = 100): AsyncGenerator<Awaited<ExpectedReturnType>> {
     const paginator = paginateQuery({ client: this.client, pageSize }, params)
     for await (const page of paginator) {
@@ -232,11 +223,11 @@ export class DynamoPlus {
     }
   }
 
-  async scanAll <ExpectedReturnType = unknown>(params: ScanCommandInput, pageSize = 100): Promise<ExpectedReturnType[]> {
-    const paginator = paginateScan({ client: this.client, pageSize }, params)
+  async queryAll <ExpectedReturnType = unknown>(params: QueryCommandInput, pageSize = 100): Promise<ExpectedReturnType[]> {
+    const queryResults = this.queryIterator<ExpectedReturnType>(params, pageSize)
     const results = []
-    for await (const page of paginator) {
-      if (page.Items) results.push(...(page.Items as ExpectedReturnType[]))
+    for await (const item of queryResults) {
+      results.push(item)
     }
     return results
   }
@@ -250,6 +241,15 @@ export class DynamoPlus {
         }
       }
     }
+  }
+
+  async scanAll <ExpectedReturnType = unknown>(params: ScanCommandInput, pageSize = 100): Promise<ExpectedReturnType[]> {
+    const scanResults = this.scanIterator<ExpectedReturnType>(params, pageSize)
+    const results = []
+    for await (const item of scanResults) {
+      results.push(item)
+    }
+    return results
   }
   // #endregion
 }
