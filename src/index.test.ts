@@ -325,11 +325,66 @@ describe('scanIterator()', () => {
 })
 
 describe('transactGet()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-transactGet'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = {
+      TransactItems: [
+        {
+          Get: {
+            TableName,
+            Key: { id: '123' },
+          },
+        },
+        {
+          Get: {
+            TableName,
+            Key: { id: 'abc' },
+          },
+        },
+      ],
+    }
+    await dynamoPlus.transactGet(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(TransactGetCommand, params)
+  })
 })
 
 describe('transactWrite()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-transactWrite'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = {
+      TransactItems: [
+        {
+          Put: {
+            TableName,
+            Item: {
+              id: 'R-8',
+              name: 'Mouse',
+            },
+          },
+        },
+        {
+          Update: {
+            TableName,
+            Key: { id: 'abc' },
+            UpdateExpression: 'set #a = :x + :y',
+            ConditionExpression: '#a < :MAX',
+            ExpressionAttributeNames: { '#a': 'Sum' },
+            ExpressionAttributeValues: {
+              ':x': 20,
+              ':y': 45,
+              ':MAX': 100,
+            },
+          },
+        },
+      ],
+    }
+    await dynamoPlus.transactWrite(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(TransactWriteCommand, params)
+  })
 })
 
 describe('update()', () => {
