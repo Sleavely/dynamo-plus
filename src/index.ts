@@ -164,6 +164,7 @@ export class DynamoPlus {
         },
       })
     }, Promise.resolve())
+      .catch(throwErrorWithCallstack)
   }
 
   async getAll <ExpectedReturnType = unknown>(params: GetAllInput): Promise<ExpectedReturnType[]> {
@@ -189,6 +190,7 @@ export class DynamoPlus {
       })
       return [...previousResults, ...(output[TableName] ? output[TableName] as ExpectedReturnType[] : [])]
     }, Promise.resolve([]))
+      .catch(throwErrorWithCallstack)
   }
 
   async putAll (params: PutAllInput): Promise<void> {
@@ -211,6 +213,7 @@ export class DynamoPlus {
         },
       })
     }, Promise.resolve())
+      .catch(throwErrorWithCallstack)
   }
 
   async * queryIterator <ExpectedReturnType = unknown>(params: QueryCommandInput, pageSize = 100): AsyncGenerator<Awaited<ExpectedReturnType>> {
