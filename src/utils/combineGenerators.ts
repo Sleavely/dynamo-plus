@@ -2,7 +2,7 @@ const neverPromise = new Promise(() => {})
 
 interface CombinedPromiseResult<T> {
   index: number
-  result: IteratorResult<T, unknown>
+  result: IteratorResult<T, void>
 }
 
 const getNext = async <T>(asyncIterator: AsyncIterator<T>, index: number): Promise<CombinedPromiseResult<T>> => await asyncIterator.next().then((result) => ({ index, result }))
