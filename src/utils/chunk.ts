@@ -5,12 +5,12 @@ export const chunk = <ItemType = unknown>(
   originalArr: ItemType[],
   chunkSize: number,
 ): ItemType[][] => {
-  const input = Array.from(originalArr);
-  const chunks = [];
+  const input = Array.from(originalArr)
+  const chunks = []
 
   while (input.length) {
-    chunks.push(input.splice(0, chunkSize));
+    chunks.push(input.splice(0, chunkSize))
   }
 
-  return chunks;
-};
+  return chunks
+}
