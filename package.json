@@ -12,7 +12,7 @@
   ],
   "scripts": {
     "build": "esbuild --bundle --platform=node --packages=external --outdir=./dist/ ./src/index.ts",
-    "postbuild": "tsc --declaration --emitDeclarationOnly --outdir ./dist/ src/index.ts",
+    "postbuild": "tsc -p tsconfig.json --declaration --emitDeclarationOnly --outdir ./dist/",
     "test": "tsc --noEmit && vitest --run --silent && eslint src/"
   },
   "keywords": [
