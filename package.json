@@ -13,7 +13,7 @@
   "scripts": {
     "build": "esbuild --outdir=./dist/ ./src/index.ts",
     "postbuild": "tsc --declaration --emitDeclarationOnly --outdir ./dist/ src/index.ts",
-    "test": "tsc --noEmit && vitest --run --silent && eslint ."
+    "test": "tsc --noEmit && vitest --run --silent && eslint src/"
   },
   "keywords": [
     "aws",
