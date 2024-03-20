@@ -224,8 +224,8 @@ export class DynamoPlus {
     }
   }
 
-  async queryAll <ExpectedReturnType = unknown>(params: QueryCommandInput, pageSize = 100): Promise<ExpectedReturnType[]> {
-    const queryResults = this.queryIterator<ExpectedReturnType>(params, pageSize)
+  async queryAll <ExpectedReturnType = unknown>(params: QueryCommandInput): Promise<ExpectedReturnType[]> {
+    const queryResults = this.queryIterator<ExpectedReturnType>(params)
     const results = []
     for await (const item of queryResults) {
       results.push(item)
@@ -262,8 +262,8 @@ export class DynamoPlus {
     }
   }
 
-  async scanAll <ExpectedReturnType = unknown>(params: ScanCommandInput, pageSize = 100): Promise<ExpectedReturnType[]> {
-    const scanResults = this.scanIterator<ExpectedReturnType>(params, pageSize)
+  async scanAll <ExpectedReturnType = unknown>(params: ScanCommandInput): Promise<ExpectedReturnType[]> {
+    const scanResults = this.scanIterator<ExpectedReturnType>(params)
     const results = []
     for await (const item of scanResults) {
       results.push(item)
