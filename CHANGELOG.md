@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/Sleavely/dynamo-plus/compare/v2.0.0...v2.0.1) (2024-03-20)
+
+
+### Bug Fixes
+
+* **ts:** mark return type as void ([9acc034](https://github.com/Sleavely/dynamo-plus/commit/9acc03467e330830518e78a19779fc0042286358))
+
 ## [2.0.0](https://github.com/Sleavely/dynamo-plus/compare/v1.8.0...v2.0.0) (2024-03-20)
 
 
