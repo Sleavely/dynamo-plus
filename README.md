@@ -2,9 +2,7 @@
 
 [ ![npm version](https://img.shields.io/npm/v/dynamo-plus.svg?style=flat) ](https://npmjs.org/package/dynamo-plus "View this project on npm") [![Types, Tests and Linting](https://github.com/Sleavely/dynamo-plus/actions/workflows/test.yml/badge.svg)](https://github.com/Sleavely/dynamo-plus/actions/workflows/test.yml) [ ![Issues](https://img.shields.io/github/issues/Sleavely/dynamo-plus.svg) ](https://github.com/Sleavely/dynamo-plus/issues)
 
-> Extend and supercharge your DynamoDB DocumentClient with promises, retries, and more.
-
-[API Documentation](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html) (minus the callbacks, of course)
+> Extend and supercharge your DynamoDB DocumentClient with infinite batching.
 
 # Installation
 
@@ -13,8 +11,8 @@ npm i dynamo-plus
 ```
 
 ```js
-const { DynamoPlus } = require('dynamo-plus')
-const documentClient = DynamoPlus({
+import { DynamoPlus } from 'dynamo-plus'
+const dynamo = new DynamoPlus({
   region: 'eu-west-1',
 })
 
@@ -24,46 +22,51 @@ const regularDynamoParams = {
     myKey: '1337'
   }
 }
-const data = await documentClient.get(regularDynamoParams)
+const data = await dynamo.get(regularDynamoParams)
 ```
 
 # Features
 
-- automatically appends .promise()
-- automatically enables HTTP keep-alive
-- improves stack traces to help identify user errors
-- retries and backs off when you get throttled
-- new method for performing batchGet requests in chunks
+- Simplified stack traces that dont bury errors in AWS SDK internals
+- Optionally define the expected return type of items when using Typescript
+- `get()` returns the document or `undefined`
+- New methods for batching unlimited amounts of data
   - [getAll(params)](#methods-getall)
-- new methods for performing batchWrite requests in chunks
   - [deleteAll(params)](#methods-deleteall)
   - [putAll(params)](#methods-putall)
-- new methods for query operations
   - [queryAll(params)](#methods-queryall)
-  - [queryStream(params)](#methods-querystream)
-  - [queryStreamSync(params)](#methods-querystreamsync)
-- new methods for scan operations
+  - [queryIterator(params[, pageSize])](#methods-queryiterator)
   - [scanAll(params)](#methods-scanall)
-  - [scanStream(params)](#methods-scanstream)
-  - [scanStreamSync(params)](#methods-scanstreamsync)
+  - [scanIterator(params[, pageSize[, parallelScans]])](#methods-scaniterator)
 
-## Promises by default
+## Optional return types
 
-The DynamoPlus client will automatically append `.promise()` for you, making all methods `await`able by default.
+On methods that return documents you can have them explicitly typed from the get-go:
 
-When the client is instantiated, the original methods are prefixed and accessible through e.g. ``original_${method}``
+```typescript
+interface User {
+  id: string
+  name: string
+  age: number
+}
+const user = await dynamo.get<User>({
+  TableName: 'users',
+  Key: { id: 'agent47' },
+})
+// user is now either User or undefined
 
-## HTTP keep-alive by default
+const users = await dynamo.getAll<User>({
+  TableName: 'users',
+  Keys: [
+    { id: 'eagle-1' },
+    { id: 'pelican-1' }
+  ],
+})
+// users is now Array<User>
 
-Setting up TCP connections is slow and costly, especially when you need to perform multiple operations in a row. Enabling HTTP keep-alive can reduce latency by [up to 70%](https://theburningmonk.com/2019/02/lambda-optimization-tip-enable-http-keep-alive/), but the v2 SDK doesn't enable it by default. DynamoPlus takes care of the boilerplate for you.
-
-## Retries and backoff
-
-Whenever a query fails for reasons such as `LimitExceededException` the promise will reboot behind the scenes so that you don't have to worry about it.
-
-For information about retryable exceptions, see https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.MessagesAndCodes
-
-If you want to use a delay from the beginning, set `lastBackOff` to a millisecond value in the query params.
+const moreUsers = await dynamo.scanAll<User>({ TableName: 'users' })
+// Array<User>
+```
 
 ## New method for performing batchGet requests in chunks
 
@@ -87,7 +90,7 @@ const params = {
   Keys: [{ userId: '1' }, { userId: '2' }, /* ... */ { userId: '999' }]
 }
 
-const response = await documentClient.getAll(params)
+const response = await dynamo.getAll(params)
 // response now contains ALL documents, not just the first 100
 ```
 
@@ -112,7 +115,7 @@ const params = {
   TableName: 'Woop woop!',
   Keys: [{ userId: '123' }, { userId: 'abc' }]
 }
-await documentClient.deleteAll(params)
+await dynamo.deleteAll(params)
 ```
 
 ---
@@ -134,7 +137,7 @@ const params = {
   TableName: 'Woop woop!',
   Items: [{ a: 'b' }, { c: 'd' }]
 }
-await documentClient.putAll(params)
+await dynamo.putAll(params)
 ```
 
 ---
@@ -144,7 +147,7 @@ await documentClient.putAll(params)
 Query has new sibling methods that automatically paginate through resultsets for you.
 
 <a name="methods-queryall"></a>
-### queryAll(params)
+### queryAll(params[, pageSize])
 
 Resolves with the entire array of matching items.
 
@@ -158,27 +161,18 @@ const params = {
   KeyConditionExpression: 'articleNo = :val',
   ExpressionAttributeValues: { ':val': articleNo }
 }
-const response = await documentClient.queryAll(params)
+const response = await dynamo.queryAll(params)
 // response now contains ALL items with the articleNo, not just the first 1MB
 ```
 
 ---
 
-<a name="methods-querystream"></a>
-### queryStream(params)
+<a name="methods-queryiterator"></a>
+### queryIterator(params[, pageSize])
 
 - **params** - [AWS.DynamoDB.DocumentClient.query() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#query-property)
 
-Like [scanStream](#methods-scanstream), but for queries.
-
----
-
-<a name="methods-querystreamsync"></a>
-### queryStreamSync(params)
-
-- **params** - [AWS.DynamoDB.DocumentClient.query() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#query-property)
-
-Like [scanStreamSync](#methods-scanstreamsync), but for queries.
+Like [scanIterator](#methods-scaniterator), but for queries.
 
 ---
 
@@ -187,7 +181,7 @@ Like [scanStreamSync](#methods-scanstreamsync), but for queries.
 We've supercharged _scan()_ for those times when you want to recurse through entire tables.
 
 <a name="methods-scanall"></a>
-### scanAll(params)
+### scanAll(params[, pageSize])
 
 Resolves with the entire array of matching items.
 
@@ -205,87 +199,75 @@ const response = await documentClient.scanAll(params)
 
 ---
 
-<a name="methods-scanstream"></a>
-### scanStream(params[, parallelScans])
+<a name="methods-scaniterator"></a>
+### scanIterator(params[, pageSize[, parallelScanSegments]])
 
-An EventEmitter-driven approach to recursing your tables. This is a powerful tool when you have datasets that are too large to keep in memory all at once.
+An async generator-driven approach to recursing your tables. This is a powerful tool when you have datasets that are too large to keep in memory all at once.
 
-To spread out the workload across your table partitions you can define a number of `parallelScans`. DynamoPlus will automatically keep track of the queries and emit a single `done` event once they all complete.
-
-**Note:** scanStream() does not care whether your event listeners finish before it requests the next batch. (It will, however, respect throttling exceptions from DynamoDB.) If you want to control the pace, see [scanStreamSync](#methods-streamsync).
+To spread out the workload across your table partitions you can define a number of `parallelScanSegments`. DynamoPlus will launch concurrent scans and yield results on the fly.
 
 - **params** - [AWS.DynamoDB.DocumentClient.scan() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property)
-- **parallelScans** - _integer|array_ (_Default: 1_) Amount of segments to split the scan operation into. It also accepts an array of individual segment options such as LastEvaluatedKey, the length of the array then decides the amount of segments.
-
-The returned EventEmitter emits the following events:
-
-- `data` - Raw response from each scan
-- `items` - An array with documents
-- `done` - Emitted once there are no more documents scan
-- `error`
+- **pageSize** - _integer_ (_Default: 100_) How many items to retrieve per API call. (DynamoPlus automatically fetches all the pages regardless)
+- **parallelScans** - _integer_ (_Default: 1_) Amount of segments to split the scan operation into. It also accepts an array of individual segment options such as LastEvaluatedKey, the length of the array then decides the amount of segments.
 
 ```js
-const params = {
-  TableName : 'MyTable'
+const usersIterator = dynamoPlus.scanIterator({ TableName: 'users' })
+for await (const user of usersIterator) {
+  await sendNewsletter(user.email)
 }
-const emitter = documentClient.scanStream(params)
-emitter.on('items', async (items) => {
-  console.log(items)
-})
-```
-
----
-
-<a name="methods-scanstreamsync"></a>
-### scanStreamSync(params[, parallelScans])
-
-Like `scanStream()`, but will not proceed to request the next batch until all eventlisteners have returned a value (or resolved, if they return a Promise).
-
-- **params** - [AWS.DynamoDB.DocumentClient.scan() parameters](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html#scan-property)
-- **parallelScans** - _integer|array_ (_Default: 1_) Amount of segments to split the scan operation into. It also accepts an array of individual segment options such as LastEvaluatedKey, the length of the array then decides the amount of segments.
-
-The returned EventEmitter emits the following events:
-
-- `data` - Raw response from each scan
-- `items` - An array with documents
-- `done` - Emitted once there are no more documents scan
-- `error`
-
-```js
-const params = {
-  TableName : 'MyTable'
-}
-const emitter = documentClient.scanStreamSync(params)
-emitter.on('items', async (items) => {
-  // Do something async with the documents
-  return Promise.all(items.map((item) => sendItemToSantaClaus(item)))
-  // Once the Promise.all resolves, scanStreamSync() will automatically request the next batch.
-})
 ```
 
 ---
 
 # FAQ
 
-### I'm getting errors that the `aws-sdk` module isn't installed.
+### Can I interact with the DocumentClient directly?
 
-`aws-sdk` is set as a dev-dependency since it is pretty large and installed by default on AWS Lambda.
-
-### I need to use the regular client methods for some edge case.
-
-They are all available with an `original_` prefix:
+Yes, its accessible via `.client`:
 
 ```js
-const { DynamoPlus } = require('dynamo-plus')
-const documentClient = DynamoPlus()
+import { DescribeTableCommand } from '@aws-sdk/client-dynamodb'
+import { DynamoPlus } from 'dynamo-plus'
+const dynamo = new DynamoPlus()
 
-documentClient.original_get(myParams, (err, data) => {})
-// or
-documentClient.original_get(myParams).promise()
+const command = new DescribeTableCommand({ TableName: 'my-table' })
+dynamo.client.send(command)
 ```
 
-Automatic retries don't apply when calling original methods directly.
+### How do I upgrade from v1 to v2?
 
-### None of these questions seem to be questions.
+DynamoPlus 2.0.0 introduces a significant rewrite. Changes include:
 
-That's a statement, but I see your point.
+* Rewritten from the ground up using modern tools and syntax, natively producing correct type definitions
+
+* `aws-sdk` v2 has been replaced with `@aws-sdk/*` v3 and are now explicit dependencies
+
+* `DynamoPlus` is now a class that you instantiate with `new`, similar to the AWS clients
+  ```ts
+  const dynamo = new DynamoPlus({ region: 'eu-west-1' })
+  ```
+
+* `queryStream` and `queryStreamSync` have been replaced with `queryIterator`
+  ```js
+  const params = {
+    TableName: 'users',
+    IndexName: 'orgs-index',
+    KeyConditionExpression: "organisationId = :val",
+    ExpressionAttributeValues: { ":val": organisationId },
+  }
+  const queryResults = dynamo.queryIterator(params)
+  for await (const user of queryResults) {
+    console.log(user)
+  }
+  ```
+
+* `scanStream` and `scanStreamSync` have been replaced with `scanIterator`
+  ```js
+  const params = {
+    TableName: 'users',
+  }
+  const scanResults = dynamo.scanIterator(params)
+  for await (const user of scanResults) {
+    console.log(user)
+  }
+  ```
