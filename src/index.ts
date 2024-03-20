@@ -41,11 +41,12 @@ import {
 import { chunk } from './utils/chunk'
 import { batchWriteRetry } from './utils/batchWriteRetry'
 import { batchReadRetry } from './utils/batchReadRetry'
+import { combineAsyncIterables } from './utils/combineGenerators'
 
 /**
  * Re-throws errors to avoid callstacks being discarded between ticks
  */
-const throwErrorWithCallstack = async (err: Error): Promise<never> => {
+const resetErrorStack = async (err: Error): Promise<never> => {
   throw new Error(err.message)
 }
 
@@ -81,25 +82,25 @@ export class DynamoPlus {
   async batchGet (input: BatchGetCommandInput): Promise<BatchGetCommandOutput> {
     return await this.client
       .send(new BatchGetCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async batchWrite (input: BatchWriteCommandInput): Promise<BatchWriteCommandOutput> {
     return await this.client
       .send(new BatchWriteCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
-  async deleteCommand (input: DeleteCommandInput): Promise<DeleteCommandOutput> {
+  async delete (input: DeleteCommandInput): Promise<DeleteCommandOutput> {
     return await this.client
       .send(new DeleteCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async get <ExpectedReturnType = unknown>(input: GetCommandInput): Promise<ExpectedReturnType | undefined> {
     const result = await this.client
       .send(new GetCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
     return result.Item
       ? result.Item as ExpectedReturnType
       : undefined
@@ -108,37 +109,37 @@ export class DynamoPlus {
   async put (input: PutCommandInput): Promise<PutCommandOutput> {
     return await this.client
       .send(new PutCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async query (input: QueryCommandInput): Promise<QueryCommandOutput> {
     return await this.client
       .send(new QueryCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async scan (input: ScanCommandInput): Promise<ScanCommandOutput> {
     return await this.client
       .send(new ScanCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async transactGet (input: TransactGetCommandInput): Promise<TransactGetCommandOutput> {
     return await this.client
       .send(new TransactGetCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async transactWrite (input: TransactWriteCommandInput): Promise<TransactWriteCommandOutput> {
     return await this.client
       .send(new TransactWriteCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async update (input: UpdateCommandInput): Promise<UpdateCommandOutput> {
     return await this.client
       .send(new UpdateCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
   // #endregion
 
@@ -163,6 +164,7 @@ export class DynamoPlus {
         },
       })
     }, Promise.resolve())
+      .catch(resetErrorStack)
   }
 
   async getAll <ExpectedReturnType = unknown>(params: GetAllInput): Promise<ExpectedReturnType[]> {
@@ -188,6 +190,7 @@ export class DynamoPlus {
       })
       return [...previousResults, ...(output[TableName] ? output[TableName] as ExpectedReturnType[] : [])]
     }, Promise.resolve([]))
+      .catch(resetErrorStack)
   }
 
   async putAll (params: PutAllInput): Promise<void> {
@@ -210,15 +213,7 @@ export class DynamoPlus {
         },
       })
     }, Promise.resolve())
-  }
-
-  async queryAll <ExpectedReturnType = unknown>(params: QueryCommandInput, pageSize = 100): Promise<ExpectedReturnType[]> {
-    const paginator = paginateQuery({ client: this.client, pageSize }, params)
-    const results = []
-    for await (const page of paginator) {
-      if (page.Items) results.push(...(page.Items as ExpectedReturnType[]))
-    }
-    return results
+      .catch(resetErrorStack)
   }
 
   async * queryIterator <ExpectedReturnType = unknown>(params: QueryCommandInput, pageSize = 100): AsyncGenerator<Awaited<ExpectedReturnType>> {
@@ -232,16 +227,16 @@ export class DynamoPlus {
     }
   }
 
-  async scanAll <ExpectedReturnType = unknown>(params: ScanCommandInput, pageSize = 100): Promise<ExpectedReturnType[]> {
-    const paginator = paginateQuery({ client: this.client, pageSize }, params)
+  async queryAll <ExpectedReturnType = unknown>(params: QueryCommandInput): Promise<ExpectedReturnType[]> {
+    const queryResults = this.queryIterator<ExpectedReturnType>(params)
     const results = []
-    for await (const page of paginator) {
-      if (page.Items) results.push(...(page.Items as ExpectedReturnType[]))
+    for await (const item of queryResults) {
+      results.push(item)
     }
     return results
   }
 
-  async * scanIterator <ExpectedReturnType = unknown>(params: ScanCommandInput, pageSize = 100): AsyncGenerator<Awaited<ExpectedReturnType>> {
+  private async * scanSegmentIterator <ExpectedReturnType = unknown>(params: ScanCommandInput, pageSize = 100): AsyncGenerator<Awaited<ExpectedReturnType>> {
     const paginator = paginateScan({ client: this.client, pageSize }, params)
     for await (const page of paginator) {
       if (page.Items) {
@@ -250,6 +245,33 @@ export class DynamoPlus {
         }
       }
     }
+  }
+
+  async * scanIterator <ExpectedReturnType = unknown>(params: ScanCommandInput, pageSize = 100, parallelScanSegments = 1): AsyncGenerator<Awaited<ExpectedReturnType>> {
+    if (parallelScanSegments < 1) throw new Error('You must partition table into at least 1 segment for the scan')
+
+    const segmentIterators = Array.from({ length: parallelScanSegments }).map((val, i) => {
+      return this.scanSegmentIterator<ExpectedReturnType>(
+        {
+          ...params,
+          Segment: i,
+          TotalSegments: parallelScanSegments,
+        },
+        pageSize,
+      )
+    })
+    for await (const item of combineAsyncIterables<ExpectedReturnType>(segmentIterators)) {
+      yield item
+    }
+  }
+
+  async scanAll <ExpectedReturnType = unknown>(params: ScanCommandInput): Promise<ExpectedReturnType[]> {
+    const scanResults = this.scanIterator<ExpectedReturnType>(params)
+    const results = []
+    for await (const item of scanResults) {
+      results.push(item)
+    }
+    return results
   }
   // #endregion
 }

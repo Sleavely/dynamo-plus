@@ -2,7 +2,18 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { mockClient } from 'aws-sdk-client-mock'
 import 'aws-sdk-client-mock-jest'
 import { DynamoPlus } from '.'
-import { BatchGetCommand, BatchWriteCommand, GetCommand } from '@aws-sdk/lib-dynamodb'
+import {
+  BatchGetCommand,
+  BatchWriteCommand,
+  DeleteCommand,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+  ScanCommand,
+  TransactGetCommand,
+  TransactWriteCommand,
+  UpdateCommand,
+} from '@aws-sdk/lib-dynamodb'
 
 const dynamoPlus = new DynamoPlus()
 const client = dynamoPlus.client
@@ -10,16 +21,48 @@ const clientMock = mockClient(client)
 
 beforeEach(() => {
   clientMock.reset()
-  clientMock.on(BatchGetCommand).resolves({})
-  clientMock.on(BatchWriteCommand).resolves({})
+  clientMock.resolves({})
 })
 
 describe('batchGet()', () => {
-  test.todo('does something', async () => {})
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = { RequestItems: { 'vitest-table-batchGet': { Keys: [{ id: '123' }, { id: '456' }] } } }
+    await dynamoPlus.batchGet(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(BatchGetCommand, params)
+  })
 })
 
 describe('batchWrite()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-batchWrite'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = {
+      RequestItems: {
+        [TableName]: [
+          { DeleteRequest: { Key: { userid: 'potato' } } },
+          { PutRequest: { Item: { userid: 'fries' } } },
+        ],
+      },
+    }
+    await dynamoPlus.batchWrite(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(BatchWriteCommand, params)
+  })
+})
+
+describe('delete()', () => {
+  const TableName = 'vitest-table-delete'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = {
+      TableName,
+      Key: { id: 'potato' },
+    }
+    await dynamoPlus.delete(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(DeleteCommand, params)
+  })
 })
 
 describe('deleteAll()', () => {
@@ -58,7 +101,7 @@ describe('deleteAll()', () => {
 })
 
 describe('get()', () => {
-  test('sends a GetItem command, returning the item', async () => {
+  it('sends a GetItem command, returning the item', async () => {
     const expectedItem = {
       name: 'cheeseburger',
       ingredients: ['bread', 'meat', 'cheese'],
@@ -129,7 +172,14 @@ describe('getAll()', () => {
 })
 
 describe('put()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-put'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = { TableName, Item: { potatoId: '45-C' } }
+    await dynamoPlus.put(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(PutCommand, params)
+  })
 })
 
 describe('putAll()', () => {
@@ -167,37 +217,270 @@ describe('putAll()', () => {
 })
 
 describe('query()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-query'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = {
+      TableName,
+      IndexName: 'profileId-index',
+      KeyConditionExpression: '#id = :id',
+      ExpressionAttributeNames: { '#id': 'profileId' },
+      ExpressionAttributeValues: { ':id': '12345-678-90a-bcdef' },
+    }
+    await dynamoPlus.query(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(QueryCommand, params)
+  })
 })
 
 describe('queryAll()', () => {
-  test.todo('does whatever dynamo-plus does', async () => {})
+  const TableName = 'vitest-table-queryAll'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    clientMock.on(QueryCommand)
+      .resolvesOnce({ Items: [{ id: 'hello' }] })
+
+    const params = {
+      TableName,
+      IndexName: 'profileId-index',
+      KeyConditionExpression: '#id = :id',
+      ExpressionAttributeNames: { '#id': 'profileId' },
+      ExpressionAttributeValues: { ':id': '12345-678-90a-bcdef' },
+    }
+    const result = await dynamoPlus.queryAll(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(QueryCommand, params)
+    expect(result).toMatchObject([{ id: 'hello' }])
+  })
+
+  it('automatically iterates multi-page responses', async () => {
+    clientMock.on(QueryCommand)
+      .resolvesOnce({ Items: [{ id: '1' }], LastEvaluatedKey: { id: 'potato' } })
+      .resolvesOnce({ Items: [{ id: '2' }] })
+
+    const params = {
+      TableName,
+      IndexName: 'profileId-index',
+      KeyConditionExpression: '#id = :id',
+      ExpressionAttributeNames: { '#id': 'profileId' },
+      ExpressionAttributeValues: { ':id': '12345-678-90a-bcdef' },
+    }
+    const result = await dynamoPlus.queryAll(params)
+
+    expect(clientMock).toHaveReceivedCommandTimes(QueryCommand, 2)
+    expect(result).toMatchObject([{ id: '1' }, { id: '2' }])
+  })
 })
 
 describe('queryIterator()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-queryIterator'
+
+  it('yields one item at a time', async () => {
+    clientMock.on(QueryCommand)
+      .resolvesOnce({ Items: [{ id: 'first' }, { id: 'second' }] })
+
+    const scanResults = dynamoPlus.queryIterator({ TableName })
+    const results = []
+    for await (const item of scanResults) {
+      results.push(item)
+    }
+
+    expect(results).toHaveLength(2)
+  })
+
+  it('automatically iterates multi-page responses', async () => {
+    clientMock.on(QueryCommand)
+      .resolvesOnce({ Items: [{ id: 'first' }, { id: 'second' }], LastEvaluatedKey: { id: 'second' } })
+      .resolvesOnce({ Items: [{ id: 'third' }, { id: 'fourth' }] })
+
+    const scanResults = dynamoPlus.queryIterator({ TableName })
+    const results = []
+    for await (const item of scanResults) {
+      results.push(item)
+    }
+
+    expect(clientMock).toHaveReceivedCommandTimes(QueryCommand, 2)
+    expect(results).toHaveLength(4)
+  })
 })
 
 describe('scan()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-scan'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = {
+      TableName,
+    }
+    await dynamoPlus.scan(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(ScanCommand, params)
+  })
 })
 
 describe('scanAll()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-scanAll'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    clientMock.on(ScanCommand)
+      .resolvesOnce({ Items: [{ id: 'hello' }] })
+
+    const params = {
+      TableName,
+    }
+    const result = await dynamoPlus.scanAll(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(ScanCommand, params)
+    expect(result).toMatchObject([{ id: 'hello' }])
+  })
+
+  it('automatically iterates multi-page responses', async () => {
+    clientMock.on(ScanCommand)
+      .resolvesOnce({ Items: [{ id: '1' }], LastEvaluatedKey: { id: 'potato' } })
+      .resolvesOnce({ Items: [{ id: '2' }] })
+
+    const params = {
+      TableName,
+    }
+    const result = await dynamoPlus.scanAll(params)
+
+    expect(clientMock).toHaveReceivedCommandTimes(ScanCommand, 2)
+    expect(result).toMatchObject([{ id: '1' }, { id: '2' }])
+  })
 })
 
 describe('scanIterator()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-scanIterator'
+
+  it('yields one item at a time', async () => {
+    clientMock.on(ScanCommand)
+      .resolvesOnce({ Items: [{ id: 'first' }, { id: 'second' }] })
+
+    const scanResults = dynamoPlus.scanIterator({ TableName })
+    const results = []
+    for await (const item of scanResults) {
+      results.push(item)
+    }
+
+    expect(results).toHaveLength(2)
+  })
+
+  it('automatically iterates multi-page responses', async () => {
+    clientMock.on(ScanCommand)
+      .resolvesOnce({ Items: [{ id: 'first' }, { id: 'second' }], LastEvaluatedKey: { id: 'second' } })
+      .resolvesOnce({ Items: [{ id: 'third' }, { id: 'fourth' }] })
+
+    const scanResults = dynamoPlus.scanIterator({ TableName })
+    const results = []
+    for await (const item of scanResults) {
+      results.push(item)
+    }
+
+    expect(clientMock).toHaveReceivedCommandTimes(ScanCommand, 2)
+    expect(results).toHaveLength(4)
+  })
+
+  it('launches multiple scans when parallelScanSegments > 1', async () => {
+    const parallelScans = 2
+    clientMock.on(ScanCommand)
+      // segment 1
+      .resolvesOnce({ Items: [{ id: '1' }], LastEvaluatedKey: { id: 'potato' } })
+      .resolvesOnce({ Items: [{ id: '2' }] })
+      // segment 2
+      .resolvesOnce({ Items: [{ id: '3' }] })
+
+    const scanResults = dynamoPlus.scanIterator({ TableName }, 100, parallelScans)
+    const results = []
+    for await (const item of scanResults) {
+      results.push(item)
+    }
+
+    // 3 calls because the one of them had LastEvaluatedKey
+    expect(clientMock).toHaveReceivedCommandTimes(ScanCommand, 3)
+    expect(results).toMatchObject([{ id: '1' }, { id: '2' }, { id: '3' }])
+  })
 })
 
 describe('transactGet()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-transactGet'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = {
+      TransactItems: [
+        {
+          Get: {
+            TableName,
+            Key: { id: '123' },
+          },
+        },
+        {
+          Get: {
+            TableName,
+            Key: { id: 'abc' },
+          },
+        },
+      ],
+    }
+    await dynamoPlus.transactGet(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(TransactGetCommand, params)
+  })
 })
 
 describe('transactWrite()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-transactWrite'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = {
+      TransactItems: [
+        {
+          Put: {
+            TableName,
+            Item: {
+              id: 'R-8',
+              name: 'Mouse',
+            },
+          },
+        },
+        {
+          Update: {
+            TableName,
+            Key: { id: 'abc' },
+            UpdateExpression: 'set #a = :x + :y',
+            ConditionExpression: '#a < :MAX',
+            ExpressionAttributeNames: { '#a': 'Sum' },
+            ExpressionAttributeValues: {
+              ':x': 20,
+              ':y': 45,
+              ':MAX': 100,
+            },
+          },
+        },
+      ],
+    }
+    await dynamoPlus.transactWrite(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(TransactWriteCommand, params)
+  })
 })
 
 describe('update()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-update'
+
+  it('passes params to the DocumentClient equivalent', async () => {
+    const params = {
+      TableName,
+      Key: { HashKey: 'hashkey' },
+      UpdateExpression: 'set #a = :x + :y',
+      ConditionExpression: '#a < :MAX',
+      ExpressionAttributeNames: { '#a': 'Sum' },
+      ExpressionAttributeValues: {
+        ':x': 20,
+        ':y': 45,
+        ':MAX': 100,
+      },
+    }
+    await dynamoPlus.update(params)
+
+    expect(clientMock).toHaveReceivedCommandWith(UpdateCommand, params)
+  })
 })
