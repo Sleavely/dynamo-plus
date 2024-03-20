@@ -273,7 +273,35 @@ describe('queryAll()', () => {
 })
 
 describe('queryIterator()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-queryIterator'
+
+  it('yields one item at a time', async () => {
+    clientMock.on(QueryCommand)
+      .resolvesOnce({ Items: [{ id: 'first' }, { id: 'second' }] })
+
+    const scanResults = dynamoPlus.queryIterator({ TableName })
+    const results = []
+    for await (const item of scanResults) {
+      results.push(item)
+    }
+
+    expect(results).toHaveLength(2)
+  })
+
+  it('automatically iterates multi-page responses', async () => {
+    clientMock.on(QueryCommand)
+      .resolvesOnce({ Items: [{ id: 'first' }, { id: 'second' }], LastEvaluatedKey: { id: 'second' } })
+      .resolvesOnce({ Items: [{ id: 'third' }, { id: 'fourth' }] })
+
+    const scanResults = dynamoPlus.queryIterator({ TableName })
+    const results = []
+    for await (const item of scanResults) {
+      results.push(item)
+    }
+
+    expect(clientMock).toHaveReceivedCommandTimes(QueryCommand, 2)
+    expect(results).toHaveLength(4)
+  })
 })
 
 describe('scan()', () => {
