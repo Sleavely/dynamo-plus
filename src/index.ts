@@ -46,7 +46,7 @@ import { combineAsyncIterables } from './utils/combineGenerators'
 /**
  * Re-throws errors to avoid callstacks being discarded between ticks
  */
-const throwErrorWithCallstack = async (err: Error): Promise<never> => {
+const resetErrorStack = async (err: Error): Promise<never> => {
   throw new Error(err.message)
 }
 
@@ -82,25 +82,25 @@ export class DynamoPlus {
   async batchGet (input: BatchGetCommandInput): Promise<BatchGetCommandOutput> {
     return await this.client
       .send(new BatchGetCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async batchWrite (input: BatchWriteCommandInput): Promise<BatchWriteCommandOutput> {
     return await this.client
       .send(new BatchWriteCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async delete (input: DeleteCommandInput): Promise<DeleteCommandOutput> {
     return await this.client
       .send(new DeleteCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async get <ExpectedReturnType = unknown>(input: GetCommandInput): Promise<ExpectedReturnType | undefined> {
     const result = await this.client
       .send(new GetCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
     return result.Item
       ? result.Item as ExpectedReturnType
       : undefined
@@ -109,37 +109,37 @@ export class DynamoPlus {
   async put (input: PutCommandInput): Promise<PutCommandOutput> {
     return await this.client
       .send(new PutCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async query (input: QueryCommandInput): Promise<QueryCommandOutput> {
     return await this.client
       .send(new QueryCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async scan (input: ScanCommandInput): Promise<ScanCommandOutput> {
     return await this.client
       .send(new ScanCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async transactGet (input: TransactGetCommandInput): Promise<TransactGetCommandOutput> {
     return await this.client
       .send(new TransactGetCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async transactWrite (input: TransactWriteCommandInput): Promise<TransactWriteCommandOutput> {
     return await this.client
       .send(new TransactWriteCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async update (input: UpdateCommandInput): Promise<UpdateCommandOutput> {
     return await this.client
       .send(new UpdateCommand(input))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
   // #endregion
 
@@ -164,7 +164,7 @@ export class DynamoPlus {
         },
       })
     }, Promise.resolve())
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async getAll <ExpectedReturnType = unknown>(params: GetAllInput): Promise<ExpectedReturnType[]> {
@@ -190,7 +190,7 @@ export class DynamoPlus {
       })
       return [...previousResults, ...(output[TableName] ? output[TableName] as ExpectedReturnType[] : [])]
     }, Promise.resolve([]))
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async putAll (params: PutAllInput): Promise<void> {
@@ -213,7 +213,7 @@ export class DynamoPlus {
         },
       })
     }, Promise.resolve())
-      .catch(throwErrorWithCallstack)
+      .catch(resetErrorStack)
   }
 
   async * queryIterator <ExpectedReturnType = unknown>(params: QueryCommandInput, pageSize = 100): AsyncGenerator<Awaited<ExpectedReturnType>> {
