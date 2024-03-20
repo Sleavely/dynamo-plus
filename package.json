@@ -11,7 +11,7 @@
     "dist/index.d.ts"
   ],
   "scripts": {
-    "build": "esbuild --outdir=./dist/ ./src/index.ts",
+    "build": "esbuild --bundle --platform=node --packages=external --outdir=./dist/ ./src/index.ts",
     "postbuild": "tsc --declaration --emitDeclarationOnly --outdir ./dist/ src/index.ts",
     "test": "tsc --noEmit && vitest --run --silent && eslint src/"
   },
