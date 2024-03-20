@@ -321,7 +321,55 @@ describe('scanAll()', () => {
 })
 
 describe('scanIterator()', () => {
-  test.todo('does something', async () => {})
+  const TableName = 'vitest-table-scanIterator'
+
+  it('yields one item at a time', async () => {
+    clientMock.on(ScanCommand)
+      .resolvesOnce({ Items: [{ id: 'first' }, { id: 'second' }] })
+
+    const scanResults = dynamoPlus.scanIterator({ TableName })
+    const results = []
+    for await (const item of scanResults) {
+      results.push(item)
+    }
+
+    expect(results).toHaveLength(2)
+  })
+
+  it('automatically iterates multi-page responses', async () => {
+    clientMock.on(ScanCommand)
+      .resolvesOnce({ Items: [{ id: 'first' }, { id: 'second' }], LastEvaluatedKey: { id: 'second' } })
+      .resolvesOnce({ Items: [{ id: 'third' }, { id: 'fourth' }] })
+
+    const scanResults = dynamoPlus.scanIterator({ TableName })
+    const results = []
+    for await (const item of scanResults) {
+      results.push(item)
+    }
+
+    expect(clientMock).toHaveReceivedCommandTimes(ScanCommand, 2)
+    expect(results).toHaveLength(4)
+  })
+
+  it('launches multiple scans when parallelScanSegments > 1', async () => {
+    const parallelScans = 2
+    clientMock.on(ScanCommand)
+      // segment 1
+      .resolvesOnce({ Items: [{ id: '1' }], LastEvaluatedKey: { id: 'potato' } })
+      .resolvesOnce({ Items: [{ id: '2' }] })
+      // segment 2
+      .resolvesOnce({ Items: [{ id: '3' }] })
+
+    const scanResults = dynamoPlus.scanIterator({ TableName }, 100, parallelScans)
+    const results = []
+    for await (const item of scanResults) {
+      results.push(item)
+    }
+
+    // 3 calls because the one of them had LastEvaluatedKey
+    expect(clientMock).toHaveReceivedCommandTimes(ScanCommand, 3)
+    expect(results).toMatchObject([{ id: '1' }, { id: '2' }, { id: '3' }])
+  })
 })
 
 describe('transactGet()', () => {

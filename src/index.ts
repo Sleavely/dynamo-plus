@@ -41,6 +41,7 @@ import {
 import { chunk } from './utils/chunk'
 import { batchWriteRetry } from './utils/batchWriteRetry'
 import { batchReadRetry } from './utils/batchReadRetry'
+import { combineAsyncIterables } from './utils/combineGenerators'
 
 /**
  * Re-throws errors to avoid callstacks being discarded between ticks
@@ -232,7 +233,7 @@ export class DynamoPlus {
     return results
   }
 
-  async * scanIterator <ExpectedReturnType = unknown>(params: ScanCommandInput, pageSize = 100): AsyncGenerator<Awaited<ExpectedReturnType>> {
+  private async * scanSegmentIterator <ExpectedReturnType = unknown>(params: ScanCommandInput, pageSize = 100): AsyncGenerator<Awaited<ExpectedReturnType>> {
     const paginator = paginateScan({ client: this.client, pageSize }, params)
     for await (const page of paginator) {
       if (page.Items) {
@@ -240,6 +241,24 @@ export class DynamoPlus {
           yield item as ExpectedReturnType
         }
       }
+    }
+  }
+
+  async * scanIterator <ExpectedReturnType = unknown>(params: ScanCommandInput, pageSize = 100, parallelScanSegments = 1): AsyncGenerator<Awaited<ExpectedReturnType>> {
+    if (parallelScanSegments < 1) throw new Error('You must partition table into at least 1 segment for the scan')
+
+    const segmentIterators = Array.from({ length: parallelScanSegments }).map((val, i) => {
+      return this.scanSegmentIterator<ExpectedReturnType>(
+        {
+          ...params,
+          Segment: i,
+          TotalSegments: parallelScanSegments,
+        },
+        pageSize,
+      )
+    })
+    for await (const item of combineAsyncIterables<ExpectedReturnType>(segmentIterators)) {
+      yield item
     }
   }
 
