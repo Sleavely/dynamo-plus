@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/Sleavely/dynamo-plus/compare/v2.0.1...v2.0.2) (2024-03-24)
+
+
+### Build System
+
+* dont mark package as ESM when its CJS ([c193d86](https://github.com/Sleavely/dynamo-plus/commit/c193d86f7a970994376e24dcefa76750806b6916))
+
 ## [2.0.1](https://github.com/Sleavely/dynamo-plus/compare/v2.0.0...v2.0.1) (2024-03-20)
 
 
