@@ -2,7 +2,6 @@
   "name": "dynamo-plus",
   "version": "2.0.1",
   "description": "dynamo-plus",
-  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
